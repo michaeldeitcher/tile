@@ -1,0 +1,72 @@
+// Place all the styles related to the tile controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+#tile_webgl {
+  svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+}
+
+#tile_app, #tile_webgl {
+  //  Disable all touch selecting
+  * {
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+
+    /*
+      Introduced in IE 10.
+      See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+    */
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  g.tile {
+    path {
+      fill: #FFFFFF;
+      stroke-width: 1;
+      stroke: #000000;
+      fill-opacity: 1;
+    }
+  }
+
+  circle {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+  }
+
+  circle {
+    fill: #fff;
+    fill-opacity: .2;
+    cursor: move;
+  }
+
+  .selected {
+    fill: #ff7f0e;
+    stroke: #ff7f0e;
+  }
+
+  #popup-buttonset {
+    rect {
+      fill: white;
+      stroke: black;
+      stroke-width: 2;
+    }
+  }
+}
+
+#tile_app, #tile_webgl {
+  svg.overlay.pass-through {
+    pointer-events:none;
+  }
+  g.replay {
+    circle {
+      display: none;
+    }
+  }
+}
