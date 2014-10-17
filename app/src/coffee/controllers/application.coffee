@@ -2,9 +2,9 @@ class TileWebGL.Controllers.AppController
   constructor: (state) ->
     TileWebGL.appController = @
     @initStateMachine()
-    @appView = new TileWebGL.Views.AppView([500,500])
+    @appView = new TileWebGL.Views.AppView()
     TileWebGL.activeLayerController = @activeLayerController
-    @toolbarController = new TileWebGL.Controllers.ToolbarController(@svg)
+    new TileWebGL.Controllers.ToolbarController(@svg)
 
   start: ->
     #stage

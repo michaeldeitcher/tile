@@ -93,6 +93,7 @@ class TileWebGL.Views.Toolbar
       @wasExpanded = false
 
   open: ->
+    TileWebGL.svgOverlay.attr('class','')
     @g.attr('transform', "translate(#{window.innerWidth/2 - @size[0]/2}, #{window.innerHeight - 60})")
     @g.attr('opacity', 1)
     @opened = true

@@ -15,14 +15,10 @@ class TileWebGL.Views.Tile
 
     i = 0
     while i < @tile.data.length
-      segGeometry = @
       rectMesh = new THREE.Mesh @segmentGeometry(i), new THREE.MeshBasicMaterial { color: 0x4D4D94 }
       @scene.add rectMesh
       @rectMeshes.push rectMesh
       i++
-
-    @camera.position.z = 500
-    @renderer.render(@scene, @camera)
 
   segmentGeometry: (i) =>
     rectGeom = new THREE.Geometry()

@@ -25,9 +25,9 @@ class TileWebGL.Controllers.LayerController
   mouseUp: ( coord ) ->
     return @ignoreUp = false if @ignoreUp
     return if TileWebGL.toolbarController.handleMouseUp(coord)
-    return if @controlPointController.handleMouseUp(coord)
-    return if @segmentController.handleMouseUp(coord)
-    return if @tileController.handleMouseUp(coord)
+#    return if @controlPointController.handleMouseUp(coord)
+#    return if @segmentController.handleMouseUp(coord)
+#    return if @tileController.handleMouseUp(coord)
     TileWebGL.toolbarController.showToolbar coord
 
   mouseDown: (coord) ->

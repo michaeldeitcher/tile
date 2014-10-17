@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <title>Tile</title>
         <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
         <link rel="shortcut icon" href="favicon.ico?v=1">
         <link rel="apple-touch-icon image_src" href="apple-touch-icon-precomposed.png?v=1">
@@ -14,13 +14,25 @@
         <script src="/build/js/vendor/modernizr-2.6.2.min.js"></script>
     </head>
     <body>
-        <h1>LOADING TILE...</h1>
-        <div id='tile_webgl'></div>
+        <div id="ThreeJS" style="position: absolute; left:0px; top:0px"></div>
+        <div id="overlay">
+            <blink>LOADING...</blink>
+            <div id="menu">
+                <div id="load">Load</div>
+                <div id="create">Create</div>
+            </div>
+        </div>
 
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="/build/js/vendor/jquery-1.11.1.min.js"><\/script>')</script>
         <script src="http://d3js.org/d3.v3.js"></script>
         <script src="/build/js/vendor/three.js"></script>
+        <script src="/build/js/vendor/detector.js"></script>
+        <script src="/build/js/vendor/stats.js"></script>
+        <script src="/build/js/vendor/THREE.OrbitControls.js"></script>
+        <script src="/build/js/vendor/THREEx.KeyboardState.js"></script>
+        <script src="/build/js/vendor/THREEx.WindowResize.js"></script>
+        <script src="/build/js/vendor/THREEx.FullScreen.js"></script>
         <script src="/build/js/vendor/lz-string.js"></script>
 
         <script src="/build/js/main.js"></script>

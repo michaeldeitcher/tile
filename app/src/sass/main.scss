@@ -2,15 +2,76 @@
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
 
-#tile_webgl {
-  svg {
+body {
+  font-family: Monospace;
+  font-weight: bold;
+  background-color: #cccccc;
+  margin: 0px;
+  overflow: hidden;
+}
+
+@-webkit-keyframes blink {
+  from {
+    opacity: 1.0;
+  }
+  to {
+    opacity: 0.0;
+  }
+}
+blink {
+  -webkit-animation-name: blink;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
+  -webkit-animation-duration: 1.5s;
+}
+
+div#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  blink {
     position: absolute;
-    top: 0;
-    left: 0;
+    margin: -10px 0 0 -50px;
+    left: 50%;
+    top: 50%;
+  }
+  div#menu {
+    display: none;
+    position: absolute;
+    margin: -125px 0 0 -50px;
+    left: 50%;
+    top: 50%;
+    div {
+      width: 100px;
+      height: 60px;
+      margin-bottom: 5px;
+      border: 2px solid white;
+      color: white;
+      padding-top: 40px;
+      text-align: center;
+    }
+    div:hover {
+      background-color: #AD310B;
+      -webkit-transition: background-color 500ms linear;
+      -moz-transition: background-color 500ms linear;
+      -o-transition: background-color 500ms linear;
+      -ms-transition: background-color 500ms linear;
+      transition: background-color 500ms linear;
+    }
   }
 }
 
-#tile_app, #tile_webgl {
+div#create {
+  display: none;
+}
+
+div#overlay.pass-through {
+  pointer-events:none;
+}
+
+#tile_webgl {
   //  Disable all touch selecting
   * {
     -moz-user-select: -moz-none;
@@ -23,50 +84,5 @@
     */
     -ms-user-select: none;
     user-select: none;
-  }
-
-  g.tile {
-    path {
-      fill: #FFFFFF;
-      stroke-width: 1;
-      stroke: #000000;
-      fill-opacity: 1;
-    }
-  }
-
-  circle {
-    fill: none;
-    stroke: steelblue;
-    stroke-width: 1.5px;
-  }
-
-  circle {
-    fill: #fff;
-    fill-opacity: .2;
-    cursor: move;
-  }
-
-  .selected {
-    fill: #ff7f0e;
-    stroke: #ff7f0e;
-  }
-
-  #popup-buttonset {
-    rect {
-      fill: white;
-      stroke: black;
-      stroke-width: 2;
-    }
-  }
-}
-
-#tile_app, #tile_webgl {
-  svg.overlay.pass-through {
-    pointer-events:none;
-  }
-  g.replay {
-    circle {
-      display: none;
-    }
   }
 }
