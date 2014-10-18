@@ -15,7 +15,9 @@ class TileWebGL.Views.Tile
 
     i = 0
     while i < @tile.data.length
-      rectMesh = new THREE.Mesh @segmentGeometry(i), new THREE.MeshBasicMaterial { color: 0x4D4D94 }
+      material = new THREE.MeshPhongMaterial( { color: 0xff3300, specular: 0x555555, shininess: 30 } )
+      material.side = THREE.DoubleSide
+      rectMesh = new THREE.Mesh @segmentGeometry(i), material
       @scene.add rectMesh
       @rectMeshes.push rectMesh
       i++
@@ -26,17 +28,40 @@ class TileWebGL.Views.Tile
     segment = @tile.data[i]
     pointIndex = 0
     while pointIndex < segment.length
-      rectGeom.vertices.push @transformToLocation(i, pointIndex)
+      rectGeom.vertices.push @vector3(i, pointIndex, 5)
+      rectGeom.vertices.push @vector3(i, pointIndex, 0)
       pointIndex++
+  # front
+    rectGeom.faces.push( new THREE.Face3( 0,2,4) )
+    rectGeom.faces.push( new THREE.Face3( 0,6,4) )
 
-    rectGeom.faces.push( new THREE.Face3( 0,1,2) )
-    rectGeom.faces.push( new THREE.Face3( 3,0,2) )
+  # back
+    rectGeom.faces.push( new THREE.Face3( 1,3,5) )
+    rectGeom.faces.push( new THREE.Face3( 1,7,5) )
+
+  # top
+    rectGeom.faces.push( new THREE.Face3( 7,6,4) )
+    rectGeom.faces.push( new THREE.Face3( 5,7,4) )
+
+  # bottom
+    rectGeom.faces.push( new THREE.Face3( 3,2,0) )
+    rectGeom.faces.push( new THREE.Face3( 1,3,0) )
+
+  # left
+    rectGeom.faces.push( new THREE.Face3( 1,0,6) )
+    rectGeom.faces.push( new THREE.Face3( 7,1,6) )
+
+  # right
+    rectGeom.faces.push( new THREE.Face3( 5,4,2) )
+    rectGeom.faces.push( new THREE.Face3( 3,5,2) )
+
+    rectGeom.computeFaceNormals()
     rectGeom
 
-  transformToLocation: (segmentIndex, pointIndex) =>
+  vector3: (segmentIndex, pointIndex, depth) =>
     point = @tile.data[segmentIndex][pointIndex]
     p = @tile.location
-    new THREE.Vector3 point[0]+p[0], point[1]+p[1]
+    new THREE.Vector3 point[0]+p[0], point[1]+p[1], depth
 
   onTouchSegment: (i) =>
     if TileWebGL.stage.activeLayer().state == 'select_all' && TileWebGL.stage.activeLayer().isSegmentSelected(@tile.id, i)

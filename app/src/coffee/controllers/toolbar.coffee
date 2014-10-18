@@ -2,6 +2,7 @@ class TileWebGL.Controllers.ToolbarController
   constructor: (@svg) ->
     TileWebGL.toolbarController = @
     @toolbar = new TileWebGL.Views.Toolbar(@)
+    @addTile = true
     TileWebGL.appController.onStateChange( (state) =>
       switch state
         when 'replay'
@@ -57,13 +58,7 @@ class TileWebGL.Controllers.ToolbarController
     TileWebGL.updateTileProject()
 
   handleMouseUp: (coord) ->
-    if @addTile
-      TileWebGL.activeLayerController().processAction 'addTile', {coordinates: [coord[0], coord[1] - (.5 * TileWebGL.prefs.width)]}
-      @addTile = false
-      @closeToolbar()
-      true
-    else
-      @targetCoord?
+    TileWebGL.activeLayerController().processAction 'addTile', {coordinates: [coord[0], coord[1] - (.5 * TileWebGL.prefs.width)]}
 
   showToolbar: (coord) ->
     @toolbar.open()

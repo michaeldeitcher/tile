@@ -24,11 +24,9 @@ class TileWebGL.Models.Layer
       @processAction @actions.pop()
 
   processAction: (d,elapsedTime=null) ->
-    if d.coordinates
+    if @version == '0.01'
       p = d.coordinates
-      #      console.log p
-      d.coordinates = [ p[0] - @stage.size[0]/2, @stage.size[1]/2 - p[1] ]
-    #    console.log d
+      d.coordinates = [ p[0] - 250, 250 - p[1] ] if p
 
     switch d.action
       when 'addTile' then @addTile(d)

@@ -8,7 +8,7 @@ class TileWebGL.Controllers.AppController
 
   start: ->
     #stage
-    @stage = new TileWebGL.Models.Stage([500,500])
+    @stage = new TileWebGL.Models.Stage()
     @layerControllers = [new TileWebGL.Controllers.LayerController()]
     @activeLayerController().start()
     @changeState('show')

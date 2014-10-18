@@ -1,5 +1,5 @@
 class TileWebGL.Models.Stage
-  constructor: (@size) ->
+  constructor: ->
     TileWebGL.stage = @
     @layers = []
     @layers[0] = new TileWebGL.Models.Layer(@)

@@ -4,8 +4,16 @@ class TileWebGL.Views.AppView
 
 #    document.ontouchmove = (event) -> event.preventDefault()
     @initThreejs()
-    @createOverlay()
+    @overlayView = new TileWebGL.Views.Overlay()
     @animate()
+    @registerCreateEvents()
+    TileWebGL.appController.onStateChange( (@state) =>
+      switch state
+        when 'create'
+          @createWall()
+        else
+          @removeWall()
+    )
 
   initThreejs: ->
     # SCENE
@@ -14,13 +22,13 @@ class TileWebGL.Views.AppView
     # CAMERA
     SCREEN_WIDTH = window.innerWidth
     SCREEN_HEIGHT = window.innerHeight
-    VIEW_ANGLE = 45
+    VIEW_ANGLE = 10
     ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT
     NEAR = 0.1
     FAR = 20000
     @camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR)
     @scene.add @camera
-    @camera.position.set 0, 150, 1000
+    @camera.position.set 0, 150, 4000
     @camera.lookAt @scene.position
 
     # RENDERER
@@ -47,13 +55,21 @@ class TileWebGL.Views.AppView
     container.appendChild @stats.domElement
 
     # LIGHT
-    light = new THREE.PointLight(0xffffff)
-    light.position.set 100, 100, 50
-    @scene.add light
+#    ambientLight = new THREE.AmbientLight(0xFFFFFF);
+#    @scene.add(ambientLight);
+
+    # LIGHT
+#    light = new THREE.PointLight(0xffffff)
+#    light.position.set 100, 100, 150
+#    @scene.add light
 
 
     dirLight = new THREE.PointLight(0xffffff);
-    dirLight.position.set 100, 100, -100
+    dirLight.position.set 200, 200, 150
+    @scene.add(dirLight);
+
+    dirLight = new THREE.PointLight(0xffffff);
+    dirLight.position.set 200, 200, -150
     @scene.add(dirLight);
 
 
@@ -61,29 +77,31 @@ class TileWebGL.Views.AppView
     @projector = new THREE.Projector()
 
 
-  createOverlay: ->
+  createWall: ->
     @objects = []
-#    material = new THREE.MeshBasicMaterial { color: 0xCCCCCC }
-    material = new THREE.MeshPhongMaterial( { color: 0xff3300, specular: 0x555555, shininess: 30 } )
+    material = new THREE.MeshPhongMaterial( { color: 0xCCCCCC, shininess: 1 } )
 
-    geometry = new THREE.BoxGeometry 50, 50, 400
-    box = new THREE.Mesh geometry, material
-    box.position.set(-40,26,0)
-    @scene.add box
-    @objects.push box
-    @renderer.render(@scene, @camera)
+    geometry = new THREE.BoxGeometry 600, 600, 1
+    @wall = new THREE.Mesh geometry, material
+    @wall.position.set(0,0,1)
 
-    @overlayView = new TileWebGL.Views.Overlay()
+    @scene.add @wall
+    @objects.push @wall
 
-#    @renderer.domElement.addEventListener 'mousemove', (event) =>
-#      @changeColorIfIntersected(event)
-#
-#    @renderer.domElement.addEventListener 'mouseup', (event) =>
-#      TileWebGL.activeLayerController().mouseUp @getCoordinates(event)
-#
-#    @renderer.domElement.addEventListener 'mousedown', (event) =>
-#      event.preventDefault()
-#      TileWebGL.activeLayerController().mouseDown @getCoordinates(event)
+  removeWall: ->
+    return unless @wall
+    @scene.remove @wall
+    @objects.remove @wall
+
+  registerCreateEvents: ->
+    @renderer.domElement.addEventListener 'mousemove', (event) =>
+      @getCoordinates(event) if @state == 'create'
+
+    @renderer.domElement.addEventListener 'mouseup', (event) =>
+      TileWebGL.activeLayerController().mouseUp @getCoordinates(event) if @state == 'create'
+
+    @renderer.domElement.addEventListener 'mousedown', (event) =>
+      TileWebGL.activeLayerController().mouseDown @getCoordinates(event) if @state == 'create'
 
   animate: ->
     requestAnimationFrame( TileWebGL.appView.animate )
@@ -97,12 +115,7 @@ class TileWebGL.Views.AppView
     @controls.update()
     @stats.update()
 
-
   getCoordinates: (event) ->
-    container = @renderer.domElement
-    viewWidth = window.innerWidth;
-    viewHeight = window.innerHeight;
-
     mouseX = ( event.clientX / window.innerWidth ) * 2 - 1
     mouseY = - ( event.clientY / window.innerHeight ) * 2 + 1
 
@@ -116,22 +129,3 @@ class TileWebGL.Views.AppView
       [intersects[ 0 ].point.x, intersects[ 0 ].point.y]
     else
       null
-
-  changeColorIfIntersected: (event) ->
-    container = @renderer.domElement
-    mouseX = ( event.clientX / window.innerWidth ) * 2 - 1
-    mouseY = - ( event.clientY / window.innerHeight ) * 2 + 1
-
-    mouse3D = new THREE.Vector3( mouseX, mouseY, 1 )
-
-    @projector.unprojectVector( mouse3D, @camera );
-    rayCaster = new THREE.Raycaster( @camera.position, mouse3D.sub( @camera.position ).normalize() );
-
-    intersects = rayCaster.intersectObjects( @objects )
-    if ( intersects.length > 0 )
-      console.log [intersects[ 0 ].point.x, intersects[ 0 ].point.y]
-
-
-
-
-
