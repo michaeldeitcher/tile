@@ -38,9 +38,6 @@ class TileWebGL.Views.AppView
     THREEx.WindowResize @renderer, @camera
     THREEx.FullScreen.bindKey charCode: "m".charCodeAt(0)
 
-    # CONTROLS
-    @controls = new THREE.OrbitControls(@camera, @renderer.domElement)
-
     # STATS
     @stats = new Stats()
     @stats.domElement.style.position = "absolute"
@@ -81,6 +78,7 @@ class TileWebGL.Views.AppView
 
   registerEvents: ->
     @renderer.domElement.addEventListener 'mousemove', (event) =>
+      return if @ignoreMouseEvents
       intersect = @raycastIntersects(event)
       if intersect?
         intersect.object.view.mouseMove [intersect.point.x, intersect.point.y]
@@ -89,13 +87,28 @@ class TileWebGL.Views.AppView
     @renderer.domElement.addEventListener 'mouseup', (event) =>
       intersect = @raycastIntersects(event)
       if intersect?
-        intersect.object.view.mouseUp [intersect.point.x, intersect.point.y]
-        TileWebGL.activeLayerController().mouseUp([intersect.point.x, intersect.point.y])
+        if @ignoreMouseEvents
+          @overlayView.hidePanel()
+        else
+          intersect.object.view.mouseUp [intersect.point.x, intersect.point.y]
+          TileWebGL.activeLayerController().mouseUp([intersect.point.x, intersect.point.y])
+      else
+        @overlayView.showPanel('create') if @downEmpty?
 
     @renderer.domElement.addEventListener 'mousedown', (event) =>
+      return if @ignoreMouseEvents
       intersect = @raycastIntersects(event)
       if intersect?
         intersect.object.view.mouseDown [intersect.point.x, intersect.point.y]
+        @downEmpty = false
+      else
+        @downEmpty = true
+
+  enableOrbitControls: ->
+    @controls = new THREE.OrbitControls(@camera, @renderer.domElement)
+
+  disableOrbitControls: ->
+    @controls = null
 
   animate: ->
     requestAnimationFrame( TileWebGL.appView.animate )
@@ -106,7 +119,7 @@ class TileWebGL.Views.AppView
     @renderer.render(@scene, @camera)
 
   update: ->
-#    @controls.update()
+    @controls.update() if @controls?
     @stats.update()
 
   raycastIntersects: (event) ->

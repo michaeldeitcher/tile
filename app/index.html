@@ -17,9 +17,16 @@
         <div id="ThreeJS" style="position: absolute; left:0px; top:0px"></div>
         <div id="overlay">
             <blink>LOADING...</blink>
-            <div id="menu">
+            <div id="menu" class="panel">
                 <div id="load">Load</div>
                 <div id="create">Create</div>
+            </div>
+            <div id="create-panel" class="panel">
+                <div id="material">Material</div>
+                <div id="clear">Clear</div>
+                <div id="replay">Replay</div>
+                <div id="wall"></div>
+                <div id="save">Save</div>
             </div>
         </div>
 
@@ -45,14 +52,12 @@
         <script src="/build/js/views/layer.js"></script>
         <script src="/build/js/views/tile.js"></script>
         <script src="/build/js/views/overlay.js"></script>
-        <script src="/build/js/views/toolbar.js"></script>
 
         <script src="/build/js/controllers/application.js"></script>
         <script src="/build/js/controllers/layer.js"></script>
         <script src="/build/js/controllers/tile.js"></script>
-        <!--<script src="/build/js/controllers/segment.js"></script>-->
-        <script src="/build/js/controllers/toolbar.js"></script>
 
         <script src="/build/js/utilities/geometry.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
     </body>
 </html>

@@ -91,6 +91,7 @@ class TileWebGL.Models.Tile
   constructor: (@id, @location) ->
     width = TileWebGL.prefs.width
     length = TileWebGL.prefs.segmentStartLength
+    @config = TileWebGL.config.tile
     @data = [
       [[0,0], [length, 0], [length, width], [0, width]]
     ]
@@ -106,6 +107,7 @@ class TileWebGL.Models.Tile
 
   controlPointData: ->
     data = []
+    return [] if @numOfSegments() == 0
     for i in [0..@numOfSegments()-1]
       segment = @getSegment(i)
       data = data.concat segment.controlPointData()

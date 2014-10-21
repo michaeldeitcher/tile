@@ -4,7 +4,6 @@ class TileWebGL.Controllers.AppController
     @initStateMachine()
     @appView = new TileWebGL.Views.AppView()
     TileWebGL.activeLayerController = @activeLayerController
-    new TileWebGL.Controllers.ToolbarController(@svg)
 
   start: ->
     #stage
@@ -26,6 +25,7 @@ class TileWebGL.Controllers.AppController
 
   replayHistory: (history) ->
     @lastState = @changeState('replay')
+    @appView.ignoreMouseEvents = true
     @activeLayerController().layer.animateHistory(history.reverse())
 
   replayCanvas: ->

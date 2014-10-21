@@ -43,6 +43,8 @@ div#overlay {
     margin: -125px 0 0 -50px;
     left: 50%;
     top: 50%;
+  }
+  div.panel {
     div {
       width: 100px;
       height: 60px;
@@ -60,6 +62,13 @@ div#overlay {
       -ms-transition: background-color 500ms linear;
       transition: background-color 500ms linear;
     }
+  }
+  div#create-panel {
+    display: none;
+    position: absolute;
+    margin: 100px 0 0 -200px;
+    left: 100%;
+    top: 0%;
   }
 }
 

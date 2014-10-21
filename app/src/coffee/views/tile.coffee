@@ -34,15 +34,37 @@ class TileWebGL.Views.Tile
     @tileSelected = selected
     @redrawControlPoints()
 
+
 class TileWebGL.Views.TileSegment
   constructor: (@tileView, @segmentIndex) ->
     @appView = TileWebGL.appView
     @layerController = TileWebGL.activeLayerController()
     @tile = @tileView.tile
+    @config = @tile.config
     @data = @tile.data[@segmentIndex]
 
   create: ->
-    material = new THREE.MeshPhongMaterial( { color: 0xff3300, specular: 0x555555, shininess: 30 } )
+    matcfg = @config.material
+    attr = {
+      color: matcfg.color.replace("#", "0x")
+#      ambient: matcfg.colorA.replace("#", "0x")
+#      emmissive: matcfg.colorE.replace("#", "0x")
+      specular: matcfg.colorS.replace("#", "0x")
+      shininess: matcfg.shininess
+#      opacity: matcfg.opacity
+#      transparent: true
+    }
+    material = switch matcfg.material
+      when 'Basic'
+        new THREE.MeshBasicMaterial(attr)
+      when 'Lambert'
+        new THREE.MeshLambertMaterial(attr)
+      when 'Phong'
+        new THREE.MeshPhongMaterial(attr)
+      when 'Wireframe'
+        attr.wireframe = true
+        new THREE.MeshBasicMaterial { attr }
+
     material.side = THREE.DoubleSide
     @segment = new THREE.Mesh @geometry(), material
     @segment['view'] = @

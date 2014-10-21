@@ -13,6 +13,7 @@ window.TileWebGL =
   updateTileProject: undefined
   activeLayerController: undefined
   toolbarController: undefined
+  config: {}
 
 $ ->
   $('blink').remove()
