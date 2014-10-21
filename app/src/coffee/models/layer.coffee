@@ -24,6 +24,7 @@ class TileWebGL.Models.Layer
       @processAction @actions.pop()
 
   processAction: (d,elapsedTime=null) ->
+    console.log d unless d.action == 'moveControlPoint'
     if @version == '0.01'
       p = d.coordinates
       d.coordinates = [ p[0] - 250, 250 - p[1] ] if p
@@ -89,7 +90,6 @@ class TileWebGL.Models.Layer
     @tile = @tiles[d.tile]
     segment = @tile.getSegment(d.segment)
     @segment = segment
-    @layerView.selectSegment(@tile, @segment, @state)
 
   isSegmentSelected: (tileId, segmentId) ->
     @tile && @tile.id == tileId && @segment && @segment.id == segmentId
@@ -115,15 +115,13 @@ class TileWebGL.Models.Layer
 #    try
     @controlPoint.move(subtractPoint(d.coordinates, @tile.location))
     @layerView.redrawTile(@tile)
-    @layerView.selectSegment(@tile, @segment)
     @state = 'move_control_point'
 #    catch error
 #      @controlPoint = null
 
   removeControlPoint: (d) ->
     @controlPoint.remove()
-    @layerView.redrawTile(@tile)
-    @clearSelection()
+    @layerView.redrawTile(@tile, true)
 
   setVersion: (d) ->
     @version = d.version

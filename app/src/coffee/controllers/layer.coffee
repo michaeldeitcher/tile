@@ -1,15 +1,10 @@
 class TileWebGL.Controllers.LayerController
   constructor: (@svg, @stageSize) ->
-    TileWebGL.appController.onStateChange( (state) =>
-      @changeState(state)
-    )
 
   start: ->
-    @initStateMachine()
     @layer = TileWebGL.stage.activeLayer()
     @layerView = new TileWebGL.Views.Layer()
     @layer.layerView = @layerView
-    @layerView.registerEditEventHandlers()
 
     @tileController = new TileWebGL.Controllers.TileController(@layer)
     @tileController.loadTiles()
@@ -17,18 +12,11 @@ class TileWebGL.Controllers.LayerController
     @segmentController = new TileWebGL.Controllers.SegmentController()
     @controlPointController = new TileWebGL.Controllers.ControlPointController()
     @processAction 'setVersionInfo', {version: '0.2'}
+    @selectedTileSegment = null
 
   mouseMove: ( coord ) ->
     return unless @state is 'create'
     return if @controlPointController.handleMouseMove(coord)
-
-  mouseUp: ( coord ) ->
-    return @ignoreUp = false if @ignoreUp
-    return if TileWebGL.toolbarController.handleMouseUp(coord)
-#    return if @controlPointController.handleMouseUp(coord)
-#    return if @segmentController.handleMouseUp(coord)
-#    return if @tileController.handleMouseUp(coord)
-    TileWebGL.toolbarController.showToolbar coord
 
   mouseDown: (coord) ->
     switch @state
@@ -38,29 +26,45 @@ class TileWebGL.Controllers.LayerController
       else
         return
 
-  selectTileSegment: (tileId, segmentId)  ->
-    TileWebGL.toolbarController.closeToolbar()
-    @processAction('selectTileSegment', {tile: tileId, segment: segmentId})
-    @ignoreUp = true
+  addTile: ( coord ) ->
+    return if @selectedTileSegment || @selectedControlPoint
+    @processAction 'addTile', {coordinates: [coord[0], coord[1] - (.5 * TileWebGL.prefs.width)]}
+
+  selectTileSegment: ( selection ) ->
+    @processAction 'clearSelection' if @selectedTileSegment
+    @selectedTileSegment = selection
+    @processAction 'selectTileSegment', {tile: selection[0], segment: selection[1]}
+
+  splitTileSegment: ( selection ) ->
+    @processAction 'splitTileSegment', {tile: selection[0], segment: selection[1]}
+    @selectedControlPoint = null
+
+  isCurrentSegmentSelected: (selection) ->
+    return false unless @selectedTileSegment?
+    @selectedTileSegment[0] == selection[0] && @selectedTileSegment[1] == selection[1]
+
+  clearSelection: ->
+    @selectedControlPoint = @selectedTileSegment = null
+    @processAction 'clearSelection'
+
+  mouseMove: (point) ->
+    @processAction 'moveControlPoint', {coordinates: point} if @controlPointMoving
+
+  mouseUp: (point) ->
+
+  controlPointMouseDown: (id) ->
+    if @selectedControlPoint != id
+      @processAction 'selectControlPoint', {id: id}
+      @selectedControlPoint = id
+      @controlPointMoving = true
+
+  controlPointMouseUp: (id) ->
+    if @controlPointMoving
+      @controlPointMoving = false
+    else
+      @processAction 'removeControlPoint' if @selectedControlPoint == id
 
   processAction: (action, d = {}) ->
     d['action'] = action
     @layer.addAction(d)
     @layer.processActions()
-
-#### STATE MACHINE
-  initStateMachine: ->
-    @states = ['init', 'create', 'replay', 'show']
-    @stateHandlers = []
-    @changeState('init')
-
-  changeState: (state) ->
-    return if @state is state
-    throw 'not a valid state' if $.inArray(state, @states) is -1
-    lastState = @state
-    @state = state
-    handler(state) for handler in @stateHandlers
-    lastState
-
-  onStateChange: (handler) ->
-    @stateHandlers.push(handler)

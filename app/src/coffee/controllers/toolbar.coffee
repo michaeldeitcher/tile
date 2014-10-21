@@ -57,9 +57,6 @@ class TileWebGL.Controllers.ToolbarController
     @closeToolbar()
     TileWebGL.updateTileProject()
 
-  handleMouseUp: (coord) ->
-    TileWebGL.activeLayerController().processAction 'addTile', {coordinates: [coord[0], coord[1] - (.5 * TileWebGL.prefs.width)]}
-
   showToolbar: (coord) ->
     @toolbar.open()
     @addTile = true if TileWebGL.appController.state == 'create'

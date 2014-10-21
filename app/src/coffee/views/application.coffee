@@ -6,14 +6,8 @@ class TileWebGL.Views.AppView
     @initThreejs()
     @overlayView = new TileWebGL.Views.Overlay()
     @animate()
-    @registerCreateEvents()
-    TileWebGL.appController.onStateChange( (@state) =>
-      switch state
-        when 'create'
-          @createWall()
-        else
-          @removeWall()
-    )
+    @registerEvents()
+    @objects = []
 
   initThreejs: ->
     # SCENE
@@ -76,32 +70,32 @@ class TileWebGL.Views.AppView
     # initialize object to perform world/screen calculations
     @projector = new THREE.Projector()
 
+  addToScene: (threeMeshObject) ->
+    @scene.add threeMeshObject
+    @objects.push threeMeshObject
 
-  createWall: ->
-    @objects = []
-    material = new THREE.MeshPhongMaterial( { color: 0xCCCCCC, shininess: 1 } )
+  removeFromScene: (threeMeshObject) ->
+    @scene.remove threeMeshObject
+    index = @objects.indexOf threeMeshObject
+    @objects.splice index, 1 if index > -1
 
-    geometry = new THREE.BoxGeometry 600, 600, 1
-    @wall = new THREE.Mesh geometry, material
-    @wall.position.set(0,0,1)
-
-    @scene.add @wall
-    @objects.push @wall
-
-  removeWall: ->
-    return unless @wall
-    @scene.remove @wall
-    @objects.remove @wall
-
-  registerCreateEvents: ->
+  registerEvents: ->
     @renderer.domElement.addEventListener 'mousemove', (event) =>
-      @getCoordinates(event) if @state == 'create'
+      intersect = @raycastIntersects(event)
+      if intersect?
+        intersect.object.view.mouseMove [intersect.point.x, intersect.point.y]
+        TileWebGL.activeLayerController().mouseMove([intersect.point.x, intersect.point.y])
 
     @renderer.domElement.addEventListener 'mouseup', (event) =>
-      TileWebGL.activeLayerController().mouseUp @getCoordinates(event) if @state == 'create'
+      intersect = @raycastIntersects(event)
+      if intersect?
+        intersect.object.view.mouseUp [intersect.point.x, intersect.point.y]
+        TileWebGL.activeLayerController().mouseUp([intersect.point.x, intersect.point.y])
 
     @renderer.domElement.addEventListener 'mousedown', (event) =>
-      TileWebGL.activeLayerController().mouseDown @getCoordinates(event) if @state == 'create'
+      intersect = @raycastIntersects(event)
+      if intersect?
+        intersect.object.view.mouseDown [intersect.point.x, intersect.point.y]
 
   animate: ->
     requestAnimationFrame( TileWebGL.appView.animate )
@@ -112,10 +106,10 @@ class TileWebGL.Views.AppView
     @renderer.render(@scene, @camera)
 
   update: ->
-    @controls.update()
+#    @controls.update()
     @stats.update()
 
-  getCoordinates: (event) ->
+  raycastIntersects: (event) ->
     mouseX = ( event.clientX / window.innerWidth ) * 2 - 1
     mouseY = - ( event.clientY / window.innerHeight ) * 2 + 1
 
@@ -123,9 +117,5 @@ class TileWebGL.Views.AppView
 
     @projector.unprojectVector( mouse3D, @camera );
     rayCaster = new THREE.Raycaster( @camera.position, mouse3D.sub( @camera.position ).normalize() );
-
-    intersects = rayCaster.intersectObjects( @objects )
-    if ( intersects.length > 0 )
-      [intersects[ 0 ].point.x, intersects[ 0 ].point.y]
-    else
-      null
+    objects = rayCaster.intersectObjects( @objects )
+    objects[0] if objects

@@ -1,90 +1,147 @@
 class TileWebGL.Views.Tile
   constructor: (@layerView, @tile) ->
-    @renderer = TileWebGL.appView.renderer
-    @scene = TileWebGL.appView.scene
-    @camera = TileWebGL.appView.camera
-    @rectMeshes = []
-    @redraw()
-
-  clear: ->
-    @tile.data = []
+    @segments = []
+    @controlPoints = []
+    @tileSelected = false
     @redraw()
 
   redraw: ->
-    @scene.remove rectMesh for rectMesh in @rectMeshes
+    @redrawSegments()
+    @redrawControlPoints()
+
+  redrawSegments: ->
+    segment.destroy() for segment in @segments
+    @segments = []
 
     i = 0
     while i < @tile.data.length
-      material = new THREE.MeshPhongMaterial( { color: 0xff3300, specular: 0x555555, shininess: 30 } )
-      material.side = THREE.DoubleSide
-      rectMesh = new THREE.Mesh @segmentGeometry(i), material
-      @scene.add rectMesh
-      @rectMeshes.push rectMesh
+      @segments.push new TileWebGL.Views.TileSegment( @, i ).create()
       i++
 
-  segmentGeometry: (i) =>
-    rectGeom = new THREE.Geometry()
+  redrawControlPoints: ->
+    controlPoint.destroy() for controlPoint in @controlPoints
+    @controlPoints = []
 
-    segment = @tile.data[i]
+    return unless @tileSelected
+
+    i = 0
+    controlPointData = @tile.controlPointData()
+    while i < controlPointData.length
+      @controlPoints.push new TileWebGL.Views.ControlPoint( @, controlPointData[i].coord, i ).create()
+      i++
+
+  selectTile: (selected = true)->
+    @tileSelected = selected
+    @redrawControlPoints()
+
+class TileWebGL.Views.TileSegment
+  constructor: (@tileView, @segmentIndex) ->
+    @appView = TileWebGL.appView
+    @layerController = TileWebGL.activeLayerController()
+    @tile = @tileView.tile
+    @data = @tile.data[@segmentIndex]
+
+  create: ->
+    material = new THREE.MeshPhongMaterial( { color: 0xff3300, specular: 0x555555, shininess: 30 } )
+    material.side = THREE.DoubleSide
+    @segment = new THREE.Mesh @geometry(), material
+    @segment['view'] = @
+    @appView.addToScene(@segment)
+    @
+
+  destroy: ->
+    @appView.removeFromScene(@segment)
+
+  mouseMove: (coord) ->
+#    TileWebGL.activeLayerController().mouseMove coord
+
+  mouseDown: (coord) ->
+    @state = 'mousedown'
+#    TileWebGL.activeLayerController().mouseDown coord
+
+  mouseUp: (coord) ->
+    return unless @state is 'mousedown'
+    selection = [@tile.id, @segmentIndex]
+    if @layerController.isCurrentSegmentSelected selection
+      @layerController.splitTileSegment selection
+    else
+      @layerController.selectTileSegment selection
+      @tileView.selectTile()
+    @state = undefined
+
+  geometry: ->
+    geom = new THREE.Geometry()
     pointIndex = 0
-    while pointIndex < segment.length
-      rectGeom.vertices.push @vector3(i, pointIndex, 5)
-      rectGeom.vertices.push @vector3(i, pointIndex, 0)
+    while pointIndex < @data.length
+      geom.vertices.push @vector3(pointIndex, 5)
+      geom.vertices.push @vector3(pointIndex, 0)
       pointIndex++
-  # front
-    rectGeom.faces.push( new THREE.Face3( 0,2,4) )
-    rectGeom.faces.push( new THREE.Face3( 0,6,4) )
+    # front
+    geom.faces.push( new THREE.Face3( 0,2,4) )
+    geom.faces.push( new THREE.Face3( 0,6,4) )
 
-  # back
-    rectGeom.faces.push( new THREE.Face3( 1,3,5) )
-    rectGeom.faces.push( new THREE.Face3( 1,7,5) )
+    # back
+    geom.faces.push( new THREE.Face3( 1,3,5) )
+    geom.faces.push( new THREE.Face3( 1,7,5) )
 
-  # top
-    rectGeom.faces.push( new THREE.Face3( 7,6,4) )
-    rectGeom.faces.push( new THREE.Face3( 5,7,4) )
+    # top
+    geom.faces.push( new THREE.Face3( 7,6,4) )
+    geom.faces.push( new THREE.Face3( 5,7,4) )
 
-  # bottom
-    rectGeom.faces.push( new THREE.Face3( 3,2,0) )
-    rectGeom.faces.push( new THREE.Face3( 1,3,0) )
+    # bottom
+    geom.faces.push( new THREE.Face3( 3,2,0) )
+    geom.faces.push( new THREE.Face3( 1,3,0) )
 
-  # left
-    rectGeom.faces.push( new THREE.Face3( 1,0,6) )
-    rectGeom.faces.push( new THREE.Face3( 7,1,6) )
+    # left
+    geom.faces.push( new THREE.Face3( 1,0,6) )
+    geom.faces.push( new THREE.Face3( 7,1,6) )
 
-  # right
-    rectGeom.faces.push( new THREE.Face3( 5,4,2) )
-    rectGeom.faces.push( new THREE.Face3( 3,5,2) )
+    # right
+    geom.faces.push( new THREE.Face3( 5,4,2) )
+    geom.faces.push( new THREE.Face3( 3,5,2) )
 
-    rectGeom.computeFaceNormals()
-    rectGeom
+    geom.computeFaceNormals()
+    geom
 
-  vector3: (segmentIndex, pointIndex, depth) =>
-    point = @tile.data[segmentIndex][pointIndex]
+  vector3: (pointIndex, depth) ->
+    point = @data[pointIndex]
     p = @tile.location
     new THREE.Vector3 point[0]+p[0], point[1]+p[1], depth
 
-  onTouchSegment: (i) =>
-    if TileWebGL.stage.activeLayer().state == 'select_all' && TileWebGL.stage.activeLayer().isSegmentSelected(@tile.id, i)
-      TileWebGL.activeLayerController().processAction('splitTileSegment')
-    else
-      TileWebGL.activeLayerController().selectTileSegment(@tile.id,i)
+class TileWebGL.Views.ControlPoint
+  constructor: (@tileView, @coord, @id) ->
+    @appView = TileWebGL.appView
+    @layerController = TileWebGL.activeLayerController()
+    @tile = @tileView.tile
+    @
 
-  clearSelection: ->
-    @redrawSelection([])
+  create: ->
+    material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF } )
+    circleGeometry = new THREE.CircleGeometry( 10, 32 )
+    p = @tile.location
+    @controlPoint = new THREE.Mesh circleGeometry, material
+    @controlPoint.position.x = @coord[0]+p[0]
+    @controlPoint.position.y = @coord[1]+p[1]
+    @controlPoint.position.z = 20
+    @controlPoint['view'] = @
+    @appView.addToScene(@controlPoint)
+    @
 
-  selectControlPoint: (d) ->
-    TileWebGL.activeLayerController().processAction('selectControlPoint', {id: d.id})
+  destroy: ->
+    @appView.removeFromScene(@controlPoint)
 
-  selectSegment: (tile, segment, state) ->
-    if state == 'select_end'
-      @redrawSelection(segment.controlPointData(false))
-    else
-      @redrawSelection(segment.tile.controlPointData())
+  mouseMove: (coord) ->
+#    TileWebGL.activeLayerController().mouseMove coord
 
-  redrawSelection: (points) ->
-#    circle = @$g.selectAll('circle').data(points)
-#    circle.enter().append('circle')
-#    circle.attr("cx", (d) -> d.coord[0]).attr("cy", (d) -> d.coord[1]).attr('r', 10).
-#      on("mousedown", (d) => @selectControlPoint(d)).
-#      on("touchstart", (d) => @selectControlPoint(d))
-#    circle.exit().remove()
+  mouseDown: (coord) ->
+    @layerController.controlPointMouseDown @id
+
+  mouseUp: (coord) ->
+    @layerController.controlPointMouseUp @id
+
+  vector3: (pointIndex, depth) ->
+    point = @data[pointIndex]
+    p = @tile.location
+    new THREE.Vector3 point[0]+p[0], point[1]+p[1], depth
+
+
