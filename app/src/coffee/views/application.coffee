@@ -102,6 +102,17 @@ class TileWebGL.Views.AppView
       intersect = @raycastIntersects(event)
       if intersect?
         intersect.object.view.mouseDown [intersect.point.x, intersect.point.y]
+        @downEmpty = false
+      else
+        @downEmpty = true
+
+  enableOrbitControls: ->
+    @controls = new THREE.OrbitControls(@camera, @renderer.domElement)
+    @ignoreMouseEvents = true
+
+  disableOrbitControls: ->
+    @controls = null
+    @ignoreMouseEvents = false
 
   animate: ->
     requestAnimationFrame( TileWebGL.appView.animate )

@@ -40,9 +40,12 @@ class TileWebGL.Views.Wall
     @appView = TileWebGL.appView
 
   create: ->
-    material = new THREE.MeshPhongMaterial( { color: 0xCCCCCC, shininess: 1, opacity: 0.2 } )
+    material = new THREE.MeshBasicMaterial( {color: 0x000000 } )
+    geometry = new THREE.PlaneGeometry 6000, 6000, 1
 
-    geometry = new THREE.BoxGeometry 600, 600, 1
+#    material = new THREE.MeshPhongMaterial( { color: 0xCCCCCC, shininess: 1, opacity: 0.2 } )
+#    geometry = new THREE.BoxGeometry 600, 600, 1
+
     @wall = new THREE.Mesh geometry, material
     @wall.position.set(0,0,1)
     @wall['view'] = @

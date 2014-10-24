@@ -54,6 +54,7 @@ class TileWebGL.Controllers.LayerController
     @processAction 'moveControlPoint', {coordinates: point} if @controlPointMoving
 
   mouseUp: (point) ->
+    @controlPointMoving = false
 
   toggleWall: ->
     @layerView.showWall !@layerView.wall?

@@ -91,8 +91,7 @@ class TileWebGL.Models.Layer
     @tile.setMaterial @material
     @tiles.push @tile
     @segment = @tile.getSegment(0)
-    @layerView.redrawTile(@tile)
-#    @selectTileSegment({tile: @tile.id, segment: @segment.id})
+    @layerView.redrawTile(@tile, true)
 
   addTileSegment: (d) ->
     segment = @tile.addTileSegment(subtractPoint(d.coordinates, @tile.location))
@@ -103,7 +102,7 @@ class TileWebGL.Models.Layer
     @tile = @tiles[d.tile]
     segment = @tile.getSegment(d.segment)
     @segment = segment
-    TileWebGL.DATGUI.updateMaterial(@tile.getMaterial())
+#    TileWebGL.DATGUI.updateMaterial(@tile.getMaterial())
 
   isSegmentSelected: (tileId, segmentId) ->
     @tile && @tile.id == tileId && @segment && @segment.id == segmentId
