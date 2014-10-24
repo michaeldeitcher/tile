@@ -1,32 +1,62 @@
 class TileWebGL.Views.Overlay
   constructor: () ->
-    @width = window.innerWidth - 5
-    @height = window.innerHeight - 5
+    @currentPanel = null
+    new TileWebGL.Views.GUI()
 
-    TileWebGL.svgOverlay = d3.select("#tile_webgl").append("svg:svg").attr("width", @width).attr("height", @height)
-    TileWebGL.svgOverlay.attr('class', 'overlay pass-through')
+  showPanel: (@panelName) ->
+    TileWebGL.DATGUI.gui.open()
 
-    # app view
-    @overlay = TileWebGL.svgOverlay.append("svg:g").attr("width", @width).attr("height", @height)
-    center = @overlay.append('svg:g').attr('transform', "translate(#{window.innerWidth/2}, #{window.innerHeight/2})")
-    @$textMsg = center.append('svg:text').attr('text-anchor', 'middle')
-    @$target = @overlay.append('svg:g').style("opacity", 0)
-    @$target.append('circle').attr('r', 10)
-    TileWebGL.appController.onStateChange( (state) =>
-      @hideFlash()
-    )
+  hidePanel: ->
+    @currentPanel.hide() if @currentPanel.visible
 
-  flashMessage: (message) ->
-    @$textMsg.text(message)
-    @flashActive = true
+class TileWebGL.Views.GUI
+  constructor: ->
+    TileWebGL.DATGUI = @
+    @gui = new dat.GUI()
+    @parameters = TileWebGL.config.tile.material
+    @parameters.toggleWall = ->
+      TileWebGL.activeLayerController().toggleWall()
+    @parameters.toggleOrbitControls = ->
+      TileWebGL.appController.toggleOrbitControls()
 
-  showTarget: (coordinates) ->
-    if coordinates
-      @$target.attr('transform', "translate(#{coordinates[0]}, #{coordinates[1]})").style("opacity", 1)
+    @gui.remember(@parameters)
 
-  hideTarget: ->
-    @$target.style("opacity", 0)
+    @gui.addColor(@parameters, "color").name("Color (Diffuse)").listen().onChange (value) =>
+      @parameters.color = value
+      TileWebGL.appController.setMaterial @parameters
 
-  hideFlash: ->
-    @$textMsg.transition().style("opacity", 0)
-    @flashActive = false
+    @gui.addColor(@parameters, "colorAmbient").name("Color (Ambient)").listen().onChange (value) =>
+      @parameters.colorAmbient = value
+      TileWebGL.appController.setMaterial @parameters
+
+    @gui.addColor(@parameters, "colorEmissive").name("Color (Emissive)").listen().onChange (value) =>
+      @parameters.colorEmissive = value
+      TileWebGL.appController.setMaterial @parameters
+
+    @gui.addColor(@parameters, "colorSpecular").name("Color (Specular)").listen().onChange (value) =>
+      @parameters.colorSpecular = value
+      TileWebGL.appController.setMaterial @parameters
+
+    @gui.add(@parameters, "shininess").min(0).max(60).step(1).name("Shininess").listen().onChange (value) =>
+      @parameters.shininess = value
+      TileWebGL.appController.setMaterial @parameters
+
+    @gui.add(@parameters, "opacity").min(0).max(1).step(0.01).name("Opacity").listen().onChange (value) =>
+      @parameters.opacity = value
+      TileWebGL.appController.setMaterial @parameters
+
+    @gui.add(@parameters, "material", ["Basic","Lambert","Phong","Wireframe"]).name("Material Type").listen().onChange (value) =>
+      @parameters.material = value
+      TileWebGL.appController.setMaterial @parameters
+
+    @gui.add(@parameters, "toggleWall").name("Toggle Wall")
+    @gui.add(@parameters, "toggleOrbitControls").name("Toggle Orbit Controls")
+
+  updateMaterial: (material) ->
+    @parameters.color = material.color
+    @parameters.colorAmbient = material.colorAmbient
+    @parameters.colorEmissive = material.colorEmissive
+    @parameters.colorSpecular = material.colorSpecular
+    @parameters.shininess = material.shininess
+    @parameters.opacity = material.opacity
+    @parameters.material = material.material

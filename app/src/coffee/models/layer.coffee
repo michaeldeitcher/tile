@@ -8,6 +8,7 @@ class TileWebGL.Models.Layer
     @tile = null
     @segment = null
     @controlPoint = null
+    @material = TileWebGL.config.tile.material
 
   clear: ->
     @layerView.clear()
@@ -45,6 +46,7 @@ class TileWebGL.Models.Layer
       when 'clearSelection' then @clearSelection(d)
       when 'moveControlPoint' then @moveControlPoint(d)
       when 'removeControlPoint' then @removeControlPoint(d)
+      when 'setMaterial' then @setMaterial(d)
       when 'setVersionInfo' then @setVersion(d)
       when 'playMacro' then @playMacro(d)
       when 'startMacro' then @startMacro(d)
@@ -86,6 +88,7 @@ class TileWebGL.Models.Layer
 
   addTile: (d) ->
     @tile = new TileWebGL.Models.Tile(@tiles.length, d.coordinates)
+    @tile.setMaterial @material
     @tiles.push @tile
     @segment = @tile.getSegment(0)
     @layerView.redrawTile(@tile)
@@ -100,6 +103,7 @@ class TileWebGL.Models.Layer
     @tile = @tiles[d.tile]
     segment = @tile.getSegment(d.segment)
     @segment = segment
+    TileWebGL.DATGUI.updateMaterial(@tile.getMaterial())
 
   isSegmentSelected: (tileId, segmentId) ->
     @tile && @tile.id == tileId && @segment && @segment.id == segmentId
@@ -149,5 +153,12 @@ class TileWebGL.Models.Layer
     segment = @tile.addTileSegment()
     @layerView.redrawTile(@tile)
     @selectTileSegment({tile: @tile.id, segment: segment.id})
+
+  setMaterial: (d) ->
+    @material = Object.create d.material
+    if @tile
+      @tile.setMaterial @material
+      @layerView.redrawTile(@tile)
+
 
 

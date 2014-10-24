@@ -27,7 +27,7 @@ class TileWebGL.Views.AppView
 
     # RENDERER
     if Detector.webgl
-      @renderer = new THREE.WebGLRenderer(antialias: true)
+      @renderer = new THREE.WebGLRenderer(antialias: false)
     else
       @renderer = new THREE.CanvasRenderer()
     @renderer.setSize SCREEN_WIDTH, SCREEN_HEIGHT
@@ -90,9 +90,9 @@ class TileWebGL.Views.AppView
         TileWebGL.activeLayerController().mouseMove([intersect.point.x, intersect.point.y])
 
     @renderer.domElement.addEventListener 'mouseup', (event) =>
+      return if @ignoreMouseEvents
       intersect = @raycastIntersects(event)
       if intersect?
-        @disableOrbitControls()
         intersect.object.view.mouseUp [intersect.point.x, intersect.point.y]
         TileWebGL.activeLayerController().mouseUp([intersect.point.x, intersect.point.y])
       else

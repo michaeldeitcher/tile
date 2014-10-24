@@ -47,6 +47,19 @@ class TileWebGL.Controllers.AppController
   onDoneReplay: ->
     @changeState(@lastState)
 
+  setMaterial: (material) ->
+    layer.setMaterial(material) for layer in @layerControllers
+
+  toggleOrbitControls: ->
+    if @orbitOn
+      TileWebGL.appView.disableOrbitControls()
+      TileWebGL.appView.ignoreMouseEvents = false
+      @orbitOn = false
+    else
+      TileWebGL.appView.enableOrbitControls()
+      TileWebGL.appView.ignoreMouseEvents = true
+      @orbitOn = true
+
 #### STATE MACHINE
   initStateMachine: ->
     @states = ['init', 'create', 'replay', 'show']

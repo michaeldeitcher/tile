@@ -26,6 +26,9 @@ class TileWebGL.Controllers.LayerController
       else
         return
 
+  setMaterial: (material) ->
+    @processAction 'setMaterial', {material: material}
+
   addTile: ( coord ) ->
     return if @selectedTileSegment || @selectedControlPoint
     @processAction 'addTile', {coordinates: [coord[0], coord[1] - (.5 * TileWebGL.prefs.width)]}
@@ -51,6 +54,9 @@ class TileWebGL.Controllers.LayerController
     @processAction 'moveControlPoint', {coordinates: point} if @controlPointMoving
 
   mouseUp: (point) ->
+
+  toggleWall: ->
+    @layerView.showWall !@layerView.wall?
 
   controlPointMouseDown: (id) ->
     if @selectedControlPoint != id

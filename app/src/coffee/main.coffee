@@ -3,7 +3,4 @@ for property of Geometry
 
 new TileWebGL.Controllers.AppController()
 
-$ ->
-  $('blink').remove()
-
 

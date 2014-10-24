@@ -45,8 +45,18 @@ class TileWebGL.Views.TileSegment
     @tile = @tileView.tile
     @data = @tile.data[@segmentIndex]
 
-  create: ->
-    material = new THREE.MeshPhongMaterial( { color: 0xff3300, specular: 0x555555, shininess: 30 } )
+  create: (attr)->
+    material = switch @tile.material.material
+      when 'Basic'
+        new THREE.MeshBasicMaterial(@tile.material)
+      when 'Lambert'
+        new THREE.MeshLambertMaterial(@tile.material)
+      when 'Phong'
+        new THREE.MeshPhongMaterial(@tile.material)
+      when 'Wireframe'
+        $.extend(attr, {wireframe: true}, @tile.material)
+        new THREE.MeshBasicMaterial attr
+
     material.side = THREE.DoubleSide
     @segment = new THREE.Mesh @geometry(), material
     @segment['view'] = @
@@ -77,7 +87,7 @@ class TileWebGL.Views.TileSegment
     geom = new THREE.Geometry()
     pointIndex = 0
     while pointIndex < @data.length
-      geom.vertices.push @vector3(pointIndex, 5)
+      geom.vertices.push @vector3(pointIndex, TileWebGL.prefs.depth)
       geom.vertices.push @vector3(pointIndex, 0)
       pointIndex++
     # front
