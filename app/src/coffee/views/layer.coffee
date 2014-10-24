@@ -7,11 +7,9 @@ class TileWebGL.Views.Layer
     TileWebGL.appController.onStateChange( (@state) =>
       switch state
         when 'create'
-          @wall = new TileWebGL.Views.Wall().create()
+          @showWall()
         else
-          if @wall
-            @wall.destroy()
-            @wall = null
+          @showWall(false)
     )
 
   redrawTile: (tile, forceSelected = false) ->
@@ -29,13 +27,20 @@ class TileWebGL.Views.Layer
   clear: ->
     tileView.clear() for id, tileView of @tileViews
 
+  showWall: (show = true) ->
+    if show
+      @wall = new TileWebGL.Views.Wall().create()
+    else
+      if @wall
+        @wall.destroy()
+        @wall = null
 
 class TileWebGL.Views.Wall
   constructor: ->
     @appView = TileWebGL.appView
 
   create: ->
-    material = new THREE.MeshPhongMaterial( { color: 0xCCCCCC, shininess: 1 } )
+    material = new THREE.MeshPhongMaterial( { color: 0xCCCCCC, shininess: 1, opacity: 0.2 } )
 
     geometry = new THREE.BoxGeometry 600, 600, 1
     @wall = new THREE.Mesh geometry, material
@@ -43,6 +48,7 @@ class TileWebGL.Views.Wall
     @wall['view'] = @
 
     @appView.addToScene(@wall)
+    @
 
   destroy: ->
     @appView.removeFromScene(@wall)

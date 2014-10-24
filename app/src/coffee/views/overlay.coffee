@@ -1,96 +1,63 @@
 class TileWebGL.Views.Overlay
   constructor: () ->
     @currentPanel = null
+    new TileWebGL.Views.GUI()
 
   showPanel: (@panelName) ->
-    new TileWebGL.Views.GUI()
-#    @currentPanel = new TileWebGL.Views.CreatePanel() unless @currentPanel
-#    @currentPanel.show() unless @currentPanel.visible
+    TileWebGL.DATGUI.gui.open()
 
   hidePanel: ->
     @currentPanel.hide() if @currentPanel.visible
 
-class TileWebGL.Views.CreatePanel
-  constructor: ->
-    @$ = $('#create-panel')
-    @visible = false
-  show: ->
-    @$.show()
-    $('#overlay').removeClass('pass-through')
-    @visible = true
-    TileWebGL.appView.enableOrbitControls()
-    TileWebGL.appView.ignoreMouseEvents = true
-  hide: ->
-    @$.hide()
-    $('#overlay').addClass('pass-through')
-    @visible = false
-    TileWebGL.appView.disableOrbitControls()
-    TileWebGL.appView.ignoreMouseEvents = false
-  registerEventHandlers: ->
-    $('#overlay').moused()
-
-
-#    material = new THREE.MeshPhongMaterial( { color: 0xff3300, specular: 0x555555, shininess: 30 } )
-TileWebGL.config.tile = {
-  material: {
-    color: "#ff3300" # color (change "#" to "0x")
-    colorA: "#000000" # color (change "#" to "0x")
-    colorE: "#000033" # color (change "#" to "0x")
-    colorS: "#555555" # color (change "#" to "0x")
-    shininess: 30
-    opacity: 1
-    material: "Phong"
-  }
-}
-
 class TileWebGL.Views.GUI
-  @gui = null
   constructor: ->
-    return if TileWebGL.Views.GUI.gui
-    gui = TileWebGL.Views.GUI.gui = new dat.GUI()
-    parameters = TileWebGL.config.tile.material
+    TileWebGL.DATGUI = @
+    @gui = new dat.GUI()
+    @parameters = TileWebGL.config.tile.material
+    @parameters.toggleWall = ->
+      TileWebGL.activeLayerController().toggleWall()
+    @parameters.toggleOrbitControls = ->
+      TileWebGL.appController.toggleOrbitControls()
 
-    color = gui.addColor(parameters, "color").name("Color (Diffuse)").listen()
-    color.onChange (value) -> # onFinishChange
-      TileWebGL.config.tile.material.color = value
-      return
+    @gui.remember(@parameters)
 
-    ambient = gui.addColor(parameters, "colorA").name("Color (Ambient)").listen()
-    ambient.onChange (value) -> # onFinishChange
-      TileWebGL.config.tile.material.ambient value
-      return
+    @gui.addColor(@parameters, "color").name("Color (Diffuse)").listen().onChange (value) =>
+      @parameters.color = value
+      TileWebGL.appController.setMaterial @parameters
 
-    emissive = gui.addColor(parameters, "colorE").name("Color (Emissive)").listen()
-    emissive.onChange (value) -> # onFinishChange
-      TileWebGL.config.tile.material.emissive value
-      return
+    @gui.addColor(@parameters, "colorAmbient").name("Color (Ambient)").listen().onChange (value) =>
+      @parameters.colorAmbient = value
+      TileWebGL.appController.setMaterial @parameters
 
-    specular = gui.addColor(parameters, "colorS").name("Color (Specular)").listen()
-    specular.onChange (value) -> # onFinishChange
-      TileWebGL.config.tile.material.specular = value
-      return
+    @gui.addColor(@parameters, "colorEmissive").name("Color (Emissive)").listen().onChange (value) =>
+      @parameters.colorEmissive = value
+      TileWebGL.appController.setMaterial @parameters
 
-    shininess = gui.add(parameters, "shininess").min(0).max(60).step(1).name("Shininess").listen()
-    shininess.onChange (value) ->
-      TileWebGL.config.tile.material.shininess = value
-      return
+    @gui.addColor(@parameters, "colorSpecular").name("Color (Specular)").listen().onChange (value) =>
+      @parameters.colorSpecular = value
+      TileWebGL.appController.setMaterial @parameters
 
-    opacity = gui.add(parameters, "opacity").min(0).max(1).step(0.01).name("Opacity").listen()
-    opacity.onChange (value) ->
-      TileWebGL.config.tile.material.opacity = value
-      return
+    @gui.add(@parameters, "shininess").min(0).max(60).step(1).name("Shininess").listen().onChange (value) =>
+      @parameters.shininess = value
+      TileWebGL.appController.setMaterial @parameters
 
-    material = gui.add(parameters, "material", [
-      "Basic"
-      "Lambert"
-      "Phong"
-      "Wireframe"
-    ]).name("Material Type").listen()
-    material.onChange (value) ->
-      TileWebGL.config.tile.material.material = value
-      return
+    @gui.add(@parameters, "opacity").min(0).max(1).step(0.01).name("Opacity").listen().onChange (value) =>
+      @parameters.opacity = value
+      TileWebGL.appController.setMaterial @parameters
 
-    gui.add(parameters, "reset").name "Reset Parameters"
-    gui.open()
+    @gui.add(@parameters, "material", ["Basic","Lambert","Phong","Wireframe"]).name("Material Type").listen().onChange (value) =>
+      @parameters.material = value
+      TileWebGL.appController.setMaterial @parameters
 
+    @gui.add(@parameters, "toggleWall").name("Toggle Wall")
+    @gui.add(@parameters, "toggleOrbitControls").name("Toggle Orbit Controls")
+
+  updateMaterial: (material) ->
+    @parameters.color = material.color
+    @parameters.colorAmbient = material.colorAmbient
+    @parameters.colorEmissive = material.colorEmissive
+    @parameters.colorSpecular = material.colorSpecular
+    @parameters.shininess = material.shininess
+    @parameters.opacity = material.opacity
+    @parameters.material = material.material
 

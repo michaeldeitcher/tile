@@ -43,27 +43,17 @@ class TileWebGL.Views.TileSegment
     @config = @tile.config
     @data = @tile.data[@segmentIndex]
 
-  create: ->
-    matcfg = @config.material
-    attr = {
-      color: matcfg.color.replace("#", "0x")
-#      ambient: matcfg.colorA.replace("#", "0x")
-#      emmissive: matcfg.colorE.replace("#", "0x")
-      specular: matcfg.colorS.replace("#", "0x")
-      shininess: matcfg.shininess
-#      opacity: matcfg.opacity
-#      transparent: true
-    }
-    material = switch matcfg.material
+  create: (attr)->
+    material = switch @tile.material.material
       when 'Basic'
-        new THREE.MeshBasicMaterial(attr)
+        new THREE.MeshBasicMaterial(@tile.material)
       when 'Lambert'
-        new THREE.MeshLambertMaterial(attr)
+        new THREE.MeshLambertMaterial(@tile.material)
       when 'Phong'
-        new THREE.MeshPhongMaterial(attr)
+        new THREE.MeshPhongMaterial(@tile.material)
       when 'Wireframe'
-        attr.wireframe = true
-        new THREE.MeshBasicMaterial { attr }
+        $.extend(attr, {wireframe: true}, @tile.material)
+        new THREE.MeshBasicMaterial attr
 
     material.side = THREE.DoubleSide
     @segment = new THREE.Mesh @geometry(), material
@@ -95,7 +85,7 @@ class TileWebGL.Views.TileSegment
     geom = new THREE.Geometry()
     pointIndex = 0
     while pointIndex < @data.length
-      geom.vertices.push @vector3(pointIndex, 5)
+      geom.vertices.push @vector3(pointIndex, TileWebGL.prefs.depth)
       geom.vertices.push @vector3(pointIndex, 0)
       pointIndex++
     # front

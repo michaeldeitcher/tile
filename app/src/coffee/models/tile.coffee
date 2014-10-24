@@ -1,3 +1,8 @@
+pad = (n, width, z) ->
+  z = z or "0"
+  n = n + ""
+  (if n.length >= width then n else new Array(width - n.length + 1).join(z) + n)
+
 class TileWebGL.Models.ControlPoint
   constructor: (@tile, @id) ->
     @segment = @tile.getSegment(if @id is 0 then 0 else @id-1 )
@@ -91,10 +96,33 @@ class TileWebGL.Models.Tile
   constructor: (@id, @location) ->
     width = TileWebGL.prefs.width
     length = TileWebGL.prefs.segmentStartLength
-    @config = TileWebGL.config.tile
     @data = [
       [[0,0], [length, 0], [length, width], [0, width]]
     ]
+
+  setMaterial: (material) ->
+    @material = {
+      material: material.material
+      color: parseInt material.color.replace("#", "0x")
+      colorAmbient: parseInt material.colorAmbient.replace("#", "0x")
+      colorEmissive: parseInt material.colorEmissive.replace("#", "0x")
+      colorSpecular: parseInt material.colorSpecular.replace("#", "0x")
+      shininess: material.shininess
+      opacity: material.opacity
+      transparent: true
+    }
+
+  getMaterial: ->
+    {
+      material: @material.material
+      color: "#" + pad @material.color.toString(16), 6
+      colorAmbient: "#" + pad @material.colorAmbient.toString(16), 6
+      colorEmissive: "#" + pad @material.colorEmissive.toString(16), 6
+      colorSpecular: "#" + pad @material.colorSpecular.toString(16), 6
+      shininess: @material.shininess
+      opacity: @material.opacity
+      transparent: true
+    }
 
   numOfSegments: ->
     @data.length
