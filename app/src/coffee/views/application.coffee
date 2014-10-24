@@ -104,9 +104,11 @@ class TileWebGL.Views.AppView
 
   enableOrbitControls: ->
     @controls = new THREE.OrbitControls(@camera, @renderer.domElement)
+    @ignoreMouseEvents = true
 
   disableOrbitControls: ->
     @controls = null
+    @ignoreMouseEvents = false
 
   animate: ->
     requestAnimationFrame( TileWebGL.appView.animate )

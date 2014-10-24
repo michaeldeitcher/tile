@@ -47,11 +47,9 @@ class TileWebGL.Controllers.AppController
   toggleOrbitControls: ->
     if @orbitOn
       TileWebGL.appView.disableOrbitControls()
-      TileWebGL.appView.ignoreMouseEvents = false
       @orbitOn = false
     else
       TileWebGL.appView.enableOrbitControls()
-      TileWebGL.appView.ignoreMouseEvents = true
       @orbitOn = true
 
 #### STATE MACHINE

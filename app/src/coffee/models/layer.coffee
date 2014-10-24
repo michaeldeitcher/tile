@@ -81,8 +81,7 @@ class TileWebGL.Models.Layer
     @tile.setMaterial @material
     @tiles.push @tile
     @segment = @tile.getSegment(0)
-    @layerView.redrawTile(@tile)
-#    @selectTileSegment({tile: @tile.id, segment: @segment.id})
+    @layerView.redrawTile(@tile, true)
 
   addTileSegment: (d) ->
     segment = @tile.addTileSegment(subtractPoint(d.coordinates, @tile.location))
