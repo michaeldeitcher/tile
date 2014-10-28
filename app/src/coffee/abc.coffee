@@ -13,7 +13,6 @@ window.TileWebGL =
   svgOverlay: undefined
   updateTileProject: undefined
   activeLayerController: undefined
-  toolbarController: undefined
   planes: {}
   config: {
     tile: {
@@ -21,10 +20,10 @@ window.TileWebGL =
         color: "#ff3300"
         colorAmbient: "#FFFFFF"
         colorEmissive: "#FFFFFF"
-        colorSpecular: "#555555"
+        colorSpecular: "#FFFFFF"
         shininess: 30
         opacity: 1
-        material: "Phong"
+        material: "Basic"
       }
     }
   }

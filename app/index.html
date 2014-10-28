@@ -41,35 +41,18 @@
                 <li {{action 'save'}} >Save</li>
                 <li {{action 'replay'}} >Replay</li>
                 <li {{action 'clear'}} >Clear</li>
+                {{#link-to 'commands'}}<li>Commands</li>{{/link-to}}
             </ul>
             {{start}}
         </script>
 
-        <script type="text/x-handlebars" data-template-name="macros/index">
-            <ul id="menu">
-                {{#each macro in model}}
-                    {{#link-to 'macro' macro}}<li>{{macro.title}}</li>{{/link-to}}
-                {{else}}
-                <li>No Macros</li>
-                {{/each}}
-                {{someString}}
-            </ul>
-
-        </script>
-
-        <script type="text/x-handlebars" data-template-name="macros/new">
-            <ul id="menu">
-                <li>
-                    {{input type="text" id="new-macro" placeholder="Title" value=newTitle action="createMacro"}}
-                </li>
-            </ul>
-        </script>
-
-        <script type="text/x-handlebars" data-template-name="macro">
+        <script type="text/x-handlebars" data-template-name="commands">
             <ul id="menu">
                 <li {{action 'startRecording'}} >Start Recording</li>
                 <li {{action 'play'}} >Play</li>
-                <li {{action 'stop'}} >Stop</li>
+                <li class="red" {{action 'red'}}></li>
+                <li class="blue" {{action 'blue'}}></li>
+                <li class="white" {{action 'white'}}></li>
             </ul>
             {{start}}
         </script>
@@ -102,12 +85,10 @@
         <script src="/build/js/views/layer.js"></script>
         <script src="/build/js/views/tile.js"></script>
         <script src="/build/js/views/overlay.js"></script>
-        <script src="/build/js/views/toolbar.js"></script>
 
         <script src="/build/js/controllers/application.js"></script>
         <script src="/build/js/controllers/layer.js"></script>
         <script src="/build/js/controllers/tile.js"></script>
-        <script src="/build/js/controllers/toolbar.js"></script>
 
         <script src="/build/js/main.js"></script>
     </body>

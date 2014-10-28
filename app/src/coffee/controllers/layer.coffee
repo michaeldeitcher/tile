@@ -22,7 +22,6 @@ class TileWebGL.Controllers.LayerController
     switch @state
       when 'replay'
         @layer.pauseAnimation()
-        TileWebGL.toolbarController.showToolbar(coord)
       else
         return
 
