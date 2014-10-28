@@ -4,14 +4,14 @@ class TileWebGL.Views.Layer
     TileWebGL.layerView = @
     @tileViews = {}
     @controller = TileWebGL.appController.activeLayerController()
-    TileWebGL.appController.onStateChange( (@state) =>
+    TileWebGL.appController.onStateChange( (state) =>
       switch state
         when 'create'
           @wall = new TileWebGL.Views.Wall().create()
-        else
-          if @wall
-            @wall.destroy()
-            @wall = null
+#        else
+#          if @wall?
+#            @wall.destroy()
+#            @wall = null
     )
 
   redrawTile: (tile, forceSelected = false) ->
@@ -27,8 +27,7 @@ class TileWebGL.Views.Layer
     tileView.selectTile(false) if tileView
 
   clear: ->
-    tileView.clear() for id, tileView of @tileViews
-
+    tileView.destroy() for id, tileView of @tileViews
 
 class TileWebGL.Views.Wall
   constructor: ->

@@ -21,6 +21,12 @@ class TileWebGL.Controllers.AppController
     @start()
     @enableEditing()
 
+  replayHistoryString: (historyString) ->
+    @replayHistory JSON.parse( historyString )
+
+  historyString: ->
+    JSON.stringify @activeLayerController().layer.history
+
   enableEditing: ->
     @changeState('create')
 

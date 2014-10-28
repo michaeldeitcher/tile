@@ -34,6 +34,10 @@ class TileWebGL.Views.Tile
     @tileSelected = selected
     @redrawControlPoints()
 
+  destroy: ->
+    segment.destroy() for segment in @segments
+    controlPoint.destroy() for controlPoint in @controlPoints
+
 class TileWebGL.Views.TileSegment
   constructor: (@tileView, @segmentIndex) ->
     @appView = TileWebGL.appView
