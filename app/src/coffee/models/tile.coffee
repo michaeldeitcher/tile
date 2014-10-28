@@ -19,6 +19,9 @@ class TileWebGL.Models.ControlPoint
   isEnd: ->
     !@isStart()
 
+  moveDelta: (delta) ->
+    @move subtractPoint(@coord(), delta)
+
   move: (coordinates) ->
     if @isStart()
       @tile.moveStart(@segment, coordinates)
@@ -101,6 +104,13 @@ class TileWebGL.Models.Tile
   getSegment: (id) ->
     new TileWebGL.Models.Segment(@, id)
 
+  addSegment: () ->
+    last = new TileWebGL.Models.Segment(@, @data.length-1)
+    @data[@data.length] = [last.data[1],
+                           addPoint(last.data[1], [TileWebGL.prefs.segmentStartLength,0]),
+                           addPoint(last.data[2], [TileWebGL.prefs.segmentStartLength,0]),
+                           last.data[2]]
+
   getControlPoint: (id) ->
     new TileWebGL.Models.ControlPoint(@, id)
 
@@ -111,11 +121,10 @@ class TileWebGL.Models.Tile
       data = data.concat segment.controlPointData()
     data
 
-  addTileSegment: (growTo) ->
-    lastSegment = new TileWebGL.Models.Segment(@, @data.length-1)
-    segment = new TileWebGL.Models.Segment(@, @data.length)
-    @data[@data.length] = []
-    @moveEnd(segment, growTo)
+  addTileSegment: (growTo=null) ->
+    @addSegment()
+    segment = new TileWebGL.Models.Segment(@, @data.length-1)
+    @moveEnd(segment, growTo) if growTo
     segment
 
   insertSegment: (i, newSegmentPoints) ->

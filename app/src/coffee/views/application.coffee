@@ -38,9 +38,6 @@ class TileWebGL.Views.AppView
     THREEx.WindowResize @renderer, @camera
     THREEx.FullScreen.bindKey charCode: "m".charCodeAt(0)
 
-    # CONTROLS
-    @controls = new THREE.OrbitControls(@camera, @renderer.domElement)
-
     # STATS
     @stats = new Stats()
     @stats.domElement.style.position = "absolute"
@@ -70,6 +67,12 @@ class TileWebGL.Views.AppView
     # initialize object to perform world/screen calculations
     @projector = new THREE.Projector()
 
+  enableOrbitControls: ->
+    @controls = new THREE.OrbitControls(@camera, @renderer.domElement)
+
+  disableOrbitControls: ->
+    @controls = null
+
   addToScene: (threeMeshObject) ->
     @scene.add threeMeshObject
     @objects.push threeMeshObject
@@ -89,8 +92,11 @@ class TileWebGL.Views.AppView
     @renderer.domElement.addEventListener 'mouseup', (event) =>
       intersect = @raycastIntersects(event)
       if intersect?
+        @disableOrbitControls()
         intersect.object.view.mouseUp [intersect.point.x, intersect.point.y]
         TileWebGL.activeLayerController().mouseUp([intersect.point.x, intersect.point.y])
+      else
+        $('#overlay').removeClass('pass-through').show()
 
     @renderer.domElement.addEventListener 'mousedown', (event) =>
       intersect = @raycastIntersects(event)
@@ -106,7 +112,7 @@ class TileWebGL.Views.AppView
     @renderer.render(@scene, @camera)
 
   update: ->
-#    @controls.update()
+    @controls.update() if @controls?
     @stats.update()
 
   raycastIntersects: (event) ->

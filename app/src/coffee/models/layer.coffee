@@ -17,11 +17,18 @@ class TileWebGL.Models.Layer
     @controlPoint = null
 
   addAction: (action)->
+    if @controlPoint && action.action == 'moveControlPoint'
+      ptCoord = addPoint @controlPoint.coord(), @tile.location
+      action.location_delta = subtractPoint ptCoord, action.coordinates
+
     @actions.push(action)
 
   processActions: ->
     while @actions.length > 0
-      @processAction @actions.pop()
+      action = @actions.pop()
+      macro = TileWebGL.Models.Macro.recordingMacro()
+      macro.recordAction action if macro
+      @processAction action
 
   processAction: (d,elapsedTime=null) ->
     console.log d unless d.action == 'moveControlPoint'
@@ -39,6 +46,9 @@ class TileWebGL.Models.Layer
       when 'moveControlPoint' then @moveControlPoint(d)
       when 'removeControlPoint' then @removeControlPoint(d)
       when 'setVersionInfo' then @setVersion(d)
+      when 'playMacro' then @playMacro(d)
+      when 'startMacro' then @startMacro(d)
+      when 'macroAddTileSegment' then @macroAddTileSegment(d)
       else
         throw 'unsupported action'
     unless elapsedTime?
@@ -113,7 +123,10 @@ class TileWebGL.Models.Layer
 
   moveControlPoint: (d) ->
 #    try
-    @controlPoint.move(subtractPoint(d.coordinates, @tile.location))
+    if d.location_delta?
+      @controlPoint.moveDelta d.location_delta
+    else
+      @controlPoint.move(subtractPoint(d.coordinates, @tile.location))
     @layerView.redrawTile(@tile)
     @state = 'move_control_point'
 #    catch error
@@ -126,5 +139,15 @@ class TileWebGL.Models.Layer
   setVersion: (d) ->
     @version = d.version
 
+  playMacro: (d) ->
+    @replayMacro = new TileWebGL.Models.MacroReplay(d,@).play()
+
+  stopMacro: ->
+    @replayMacro.stop()
+
+  macroAddTileSegment: (d) ->
+    segment = @tile.addTileSegment()
+    @layerView.redrawTile(@tile)
+    @selectTileSegment({tile: @tile.id, segment: segment.id})
 
 
