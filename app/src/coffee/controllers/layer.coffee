@@ -53,6 +53,7 @@ class TileWebGL.Controllers.LayerController
   controlPointMouseUp: (id) ->
     if @controlPointMoving
       @controlPointMoving = false
+      @selectedControlPoint = null
     else
       @processAction 'removeControlPoint' if @selectedControlPoint == id
 

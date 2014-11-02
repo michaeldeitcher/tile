@@ -126,23 +126,40 @@ class TileWebGL.Views.ControlPoint
   constructor: (@tileView, @coord, @id) ->
     @appView = TileWebGL.appView
     @layerController = TileWebGL.activeLayerController()
+    @layer = @layerController.layer
     @tile = @tileView.tile
     @
 
-  create: ->
-    material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF } )
+  createInnerCircle: ->
+    material = new THREE.MeshBasicMaterial()
     circleGeometry = new THREE.CircleGeometry( 10, 32 )
     p = @tile.location
-    @controlPoint = new THREE.Mesh circleGeometry, material
-    @controlPoint.position.x = @coord[0]+p[0]
-    @controlPoint.position.y = @coord[1]+p[1]
-    @controlPoint.position.z = 20
-    @controlPoint['view'] = @
-    @appView.addToScene(@controlPoint)
+    @innerCircle = new THREE.Mesh circleGeometry, material
+    @innerCircle.position.x = @coord[0]+p[0]
+    @innerCircle.position.y = @coord[1]+p[1]
+    @innerCircle.position.z = TileWebGL.prefs.depth + 1
+    @innerCircle['view'] = @
+    @appView.addToScene(@innerCircle)
+
+  createOuterCircle: ->
+    material = new THREE.MeshBasicMaterial( { transparent: true, opacity: 0.0 } )
+    circleGeometry = new THREE.CircleGeometry( 20, 32 )
+    p = @tile.location
+    @outerCircle = new THREE.Mesh circleGeometry, material
+    @outerCircle.position.x = @coord[0]+p[0]
+    @outerCircle.position.y = @coord[1]+p[1]
+    @outerCircle.position.z = TileWebGL.prefs.depth + 1
+    @outerCircle['view'] = @
+    @appView.addToScene(@outerCircle)
+
+  create: ->
+    @createInnerCircle()
+    @createOuterCircle()
     @
 
   destroy: ->
-    @appView.removeFromScene(@controlPoint)
+    @appView.removeFromScene(@innerCircle)
+    @appView.removeFromScene(@outerCircle)
 
   mouseMove: (coord) ->
 #    TileWebGL.activeLayerController().mouseMove coord
