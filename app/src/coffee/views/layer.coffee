@@ -63,12 +63,8 @@ class TileWebGL.Views.Wall
 
   mouseUp: (coord) ->
     return unless @state is 'mousedown'
-    controller = TileWebGL.activeLayerController()
-    if controller.selectedTileSegment
-      controller.clearSelection()
-    else
-      controller.addTile coord
-    @state = undefined
+    TileWebGL.activeLayerController().mouseUp(coord)
+    @state = null
 
 
 

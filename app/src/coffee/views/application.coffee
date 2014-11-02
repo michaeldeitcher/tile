@@ -22,7 +22,7 @@ class TileWebGL.Views.AppView
     FAR = 20000
     @camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR)
     @scene.add @camera
-    @camera.position.set 0, 150, 4000
+    @camera.position.set 0, 150, 3000
     @camera.lookAt @scene.position
 
     # RENDERER
@@ -39,11 +39,11 @@ class TileWebGL.Views.AppView
     THREEx.FullScreen.bindKey charCode: "m".charCodeAt(0)
 
     # STATS
-    @stats = new Stats()
-    @stats.domElement.style.position = "absolute"
-    @stats.domElement.style.bottom = "0px"
-    @stats.domElement.style.zIndex = 100
-    container.appendChild @stats.domElement
+#    @stats = new Stats()
+#    @stats.domElement.style.position = "absolute"
+#    @stats.domElement.style.bottom = "0px"
+#    @stats.domElement.style.zIndex = 100
+#    container.appendChild @stats.domElement
 
     # LIGHT
 #    ambientLight = new THREE.AmbientLight(0xFFFFFF);
@@ -82,29 +82,53 @@ class TileWebGL.Views.AppView
     index = @objects.indexOf threeMeshObject
     @objects.splice index, 1 if index > -1
 
+  copyTouch: (touch) ->
+    { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY }
+
+  touchStart: (touch) ->
+    @touches[touch.identifier] = touch
+    @handleDownEvent [touch.pageX, touch.pageY]
+
+  touchMove: (touch) ->
+    @handleMoveEvent [touch.pageX, touch.pageY]
+
+  touchEnd: (touch) ->
+    @handleUpEvent [touch.pageX, touch.pageY]
+
   registerEvents: ->
-    @renderer.domElement.addEventListener 'mousemove', (event) =>
-      intersect = @raycastIntersects(event)
-      if intersect?
-        intersect.object.view.mouseMove [intersect.point.x, intersect.point.y]
-        TileWebGL.activeLayerController().mouseMove([intersect.point.x, intersect.point.y])
+    @touches = {}
+    el = @renderer.domElement
+    if (Modernizr.touch)
+      el.addEventListener "touchstart", (event) =>
+        @touchStart touch for touch in event.changedTouches
+      el.addEventListener "touchend", (event) =>
+        @touchEnd touch for touch in event.changedTouches
+      el.addEventListener "touchcancel", (event) =>
+        @touchCancel touch for touch in event.changedTouches
+      el.addEventListener "touchmove", (event) =>
+        @touchMove touch for touch in event.changedTouches
+    else
+      el.addEventListener 'mousemove', (event) => @handleMoveEvent [event.clientX, event.clientY]
+      el.addEventListener 'mouseup', (event) => @handleUpEvent [event.clientX, event.clientY]
+      el.addEventListener 'mousedown', (event) => @handleDownEvent [event.clientX, event.clientY]
 
-    @renderer.domElement.addEventListener 'mouseup', (event) =>
-      return if @ignoreMouseEvents
-      intersect = @raycastIntersects(event)
-      if intersect?
-        intersect.object.view.mouseUp [intersect.point.x, intersect.point.y]
-        TileWebGL.activeLayerController().mouseUp([intersect.point.x, intersect.point.y])
-      else
-        $('#overlay').removeClass('pass-through').show()
 
-    @renderer.domElement.addEventListener 'mousedown', (event) =>
-      intersect = @raycastIntersects(event)
-      if intersect?
-        intersect.object.view.mouseDown [intersect.point.x, intersect.point.y]
-        @downEmpty = false
-      else
-        @downEmpty = true
+  handleMoveEvent: (coord) ->
+    intersect = @raycastIntersects(coord)
+    if intersect?
+      intersect.object.view.mouseMove [intersect.point.x, intersect.point.y]
+      TileWebGL.activeLayerController().mouseMove([intersect.point.x, intersect.point.y])
+
+  handleUpEvent: (coord) ->
+    return if @ignoreMouseEvents
+    intersect = @raycastIntersects(coord)
+    if intersect?
+      intersect.object.view.mouseUp [intersect.point.x, intersect.point.y]
+
+  handleDownEvent: (coord) ->
+    intersect = @raycastIntersects(coord)
+    if intersect?
+      intersect.object.view.mouseDown [intersect.point.x, intersect.point.y]
 
   enableOrbitControls: ->
     @controls = new THREE.OrbitControls(@camera, @renderer.domElement)
@@ -124,11 +148,11 @@ class TileWebGL.Views.AppView
 
   update: ->
     @controls.update() if @controls?
-    @stats.update()
+    @stats.update() if @stats?
 
-  raycastIntersects: (event) ->
-    mouseX = ( event.clientX / window.innerWidth ) * 2 - 1
-    mouseY = - ( event.clientY / window.innerHeight ) * 2 + 1
+  raycastIntersects: (clientCoord) ->
+    mouseX = ( clientCoord[0] / window.innerWidth ) * 2 - 1
+    mouseY = - ( clientCoord[1] / window.innerHeight ) * 2 + 1
 
     mouse3D = new THREE.Vector3( mouseX, mouseY, 1 )
 

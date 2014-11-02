@@ -3,4 +3,6 @@ for property of Geometry
 
 new TileWebGL.Controllers.AppController()
 
+document.ontouchmove = (event) ->
+  event.preventDefault()
 

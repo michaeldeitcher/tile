@@ -21,7 +21,23 @@ Overlay.PlaneRoute = Ember.Route.extend(
     TileWebGL.Models.Plane.find(params.plane_id)
 )
 
-Overlay.PlaneController = Ember.ObjectController.extend(
+Overlay.MenuController = Ember.ObjectController.extend(
+  menuToggleText: 'Hide menu'
+  menuVisible: true
+
+  actions:
+    menuToggle: ->
+      if @get 'menuVisible'
+        $("ul#menu li:not('#menuToggle')").fadeOut()
+        @set('menuVisible', false)
+        @set('menuToggleText', 'Show Menu')
+      else
+        $("ul#menu li:not('#menuToggle')").fadeIn()
+        @set('menuVisible', true)
+        @set('menuToggleText', 'Hide Menu')
+)
+
+Overlay.PlaneController = Overlay.MenuController.extend(
   start: ( ->
     unless @started
       TileWebGL.appController.start()
@@ -50,7 +66,7 @@ updateColor = (color) ->
   material.color = color
   layer.setMaterial {material: material}
 
-Overlay.CommandsController = Ember.ObjectController.extend(
+Overlay.CommandsController = Overlay.MenuController.extend(
   actions:
     red: ->
       updateColor '#FF0000'

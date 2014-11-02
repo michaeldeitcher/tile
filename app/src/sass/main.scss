@@ -8,9 +8,7 @@ body {
   background-color: #cccccc;
   margin: 0px;
   overflow: hidden;
-}
 
-#tile_webgl {
   //  Disable all touch selecting
   * {
     -moz-user-select: -moz-none;
@@ -26,69 +24,40 @@ body {
   }
 }
 
-@-webkit-keyframes blink {
-  from {
-    opacity: 1.0;
+ul#menu {
+  position: absolute;
+  right: 5px;
+  margin: 0;
+  bottom: 0;
+  a {
+    text-decoration: none;
   }
-  to {
-    opacity: 0.0;
+  li {
+    width: 50px;
+    height: 30px;
+    margin-bottom: 5px;
+    border: 2px solid white;
+    color: white;
+    padding-top: 20px;
+    text-align: center;
+    list-style-type: none;
   }
-}
-blink {
-  -webkit-animation-name: blink;
-  -webkit-animation-iteration-count: infinite;
-  -webkit-animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
-  -webkit-animation-duration: 1.5s;
-}
-
-section#overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 0;
-  z-index: 0;
-  blink {
-    position: absolute;
-    margin: -10px 0 0 -50px;
-    left: 50%;
-    top: 50%;
+  li:hover {
+    background-color: #AD310B;
+    -webkit-transition: background-color 500ms linear;
+    -moz-transition: background-color 500ms linear;
+    -o-transition: background-color 500ms linear;
+    -ms-transition: background-color 500ms linear;
+    transition: background-color 500ms linear;
   }
-  ul#menu {
-    position: absolute;
-    margin: 125px 0 0 -50px;
-    left: 75%;
-    top: 50%;
-    a {
-      text-decoration: none;
-    }
-    li {
-      width: 200px;
-      height: 30px;
-      margin-bottom: 5px;
-      border: 2px solid white;
-      color: white;
-      padding-top: 20px;
-      text-align: center;
-      list-style-type: none;
-    }
-    li:hover {
-      background-color: #AD310B;
-      -webkit-transition: background-color 500ms linear;
-      -moz-transition: background-color 500ms linear;
-      -o-transition: background-color 500ms linear;
-      -ms-transition: background-color 500ms linear;
-      transition: background-color 500ms linear;
-    }
-    li.blue:hover {
-      background-color: #0000FF;
-    }
-    li.red:hover {
-      background-color: #FF0000;
-    }
-    li.white:hover {
-      background-color: #999999;
-    }
+  li.blue {
+    background-color: #0000FF;
+  }
+  li.red {
+    background-color: #FF0000;
+  }
+  li.white {
+    background-color: #999999;
   }
 }
 

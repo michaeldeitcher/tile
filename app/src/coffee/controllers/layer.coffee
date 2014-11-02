@@ -14,23 +14,19 @@ class TileWebGL.Controllers.LayerController
     @processAction 'setVersionInfo', {version: '0.2'}
     @selectedTileSegment = null
 
-  mouseMove: ( coord ) ->
-    return unless @state is 'create'
-    return if @controlPointController.handleMouseMove(coord)
+  mouseMove: (point) ->
+    @processAction 'moveControlPoint', {coordinates: point} if @controlPointMoving
 
-  mouseDown: (coord) ->
-    switch @state
-      when 'replay'
-        @layer.pauseAnimation()
-      else
-        return
+  mouseUp: (coord) ->
+    return @controlPointMoving = false if @controlPointMoving
+
+    if @layer.segment
+      @processAction 'clearSelection'
+    else
+      @processAction 'addTile', {coordinates: [coord[0], coord[1] - (.5 * TileWebGL.prefs.width)]}
 
   setMaterial: (material) ->
     @processAction 'setMaterial', {material: material}
-
-  addTile: ( coord ) ->
-    return if @selectedTileSegment || @selectedControlPoint
-    @processAction 'addTile', {coordinates: [coord[0], coord[1] - (.5 * TileWebGL.prefs.width)]}
 
   selectTileSegment: ( selection ) ->
     @processAction 'clearSelection' if @selectedTileSegment
@@ -44,16 +40,6 @@ class TileWebGL.Controllers.LayerController
   isCurrentSegmentSelected: (selection) ->
     return false unless @selectedTileSegment?
     @selectedTileSegment[0] == selection[0] && @selectedTileSegment[1] == selection[1]
-
-  clearSelection: ->
-    @selectedControlPoint = @selectedTileSegment = null
-    @processAction 'clearSelection'
-
-  mouseMove: (point) ->
-    @processAction 'moveControlPoint', {coordinates: point} if @controlPointMoving
-
-  mouseUp: (point) ->
-    @controlPointMoving = false
 
   toggleWall: ->
     @layerView.showWall !@layerView.wall?
