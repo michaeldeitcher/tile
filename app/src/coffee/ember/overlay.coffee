@@ -62,9 +62,9 @@ Overlay.PlaneController = Overlay.MenuController.extend(
 
 updateColor = (color) ->
   layer = TileWebGL.activeLayerController().layer
-  material = layer.material
+  material = $.extend({}, layer.material)
   material.color = color
-  layer.setMaterial {material: material}
+  TileWebGL.activeLayerController().processAction 'setMaterial', {material: material}
 
 Overlay.CommandsController = Overlay.MenuController.extend(
   actions:

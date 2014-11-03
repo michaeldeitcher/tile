@@ -17,16 +17,15 @@ window.TileWebGL =
   config: {
     tile: {
       material: {
-        color: "#ff3300"
-        colorAmbient: "#FFFFFF"
-        colorEmissive: "#FFFFFF"
-        colorSpecular: "#FFFFFF"
+        color: "#ff3131"
+        colorAmbient: "#000000"
+        colorEmissive: "#000000"
+        colorSpecular: "#000000"
         shininess: 30
         opacity: 1
-        material: "Basic"
+        material: "Lambert"
       }
     }
   }
-
 
 window.App = window.Overlay = Ember.Application.create();

@@ -38,6 +38,7 @@ class TileWebGL.Views.Layer
 class TileWebGL.Views.Wall
   constructor: ->
     @appView = TileWebGL.appView
+    @layerController = TileWebGL.activeLayerController()
 
   create: ->
     material = new THREE.MeshBasicMaterial( {color: 0x000000 } )
@@ -57,13 +58,16 @@ class TileWebGL.Views.Wall
     @appView.removeFromScene(@wall)
 
   mouseMove: (coord) ->
+    @layerController.mouseMove(coord)
 
   mouseDown: (coord) ->
     @state = 'mousedown'
 
   mouseUp: (coord) ->
+    @layerController.controlPointMouseUp(0) if @layerController.controlPointMoving
+
     return unless @state is 'mousedown'
-    TileWebGL.activeLayerController().mouseUp(coord)
+    @layerController.mouseUp(coord)
     @state = null
 
 

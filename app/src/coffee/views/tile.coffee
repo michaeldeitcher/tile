@@ -47,16 +47,15 @@ class TileWebGL.Views.TileSegment
 
   create: (attr)->
     material = switch @tile.material.material
-      when 'Basic'
-        new THREE.MeshBasicMaterial(@tile.material)
-      when 'Lambert'
-        new THREE.MeshLambertMaterial(@tile.material)
-      when 'Phong'
-        new THREE.MeshPhongMaterial(@tile.material)
-      when 'Wireframe'
-        $.extend(attr, {wireframe: true}, @tile.material)
-        new THREE.MeshBasicMaterial attr
-
+          when 'Basic'
+            new THREE.MeshBasicMaterial(@tile.material)
+          when 'Lambert'
+            new THREE.MeshLambertMaterial(@tile.material)
+          when 'Phong'
+            new THREE.MeshPhongMaterial(@tile.material)
+          when 'Wireframe'
+            $.extend(attr, {wireframe: true}, @tile.material)
+            new THREE.MeshBasicMaterial attr
     material.side = THREE.DoubleSide
     @segment = new THREE.Mesh @geometry(), material
     @segment['view'] = @
@@ -131,13 +130,13 @@ class TileWebGL.Views.ControlPoint
     @
 
   createInnerCircle: ->
-    material = new THREE.MeshBasicMaterial()
-    circleGeometry = new THREE.CircleGeometry( 10, 32 )
+    material = new THREE.MeshLambertMaterial(emissive: 0x202020)
+    circleGeometry = new THREE.RingGeometry( 8, 14, 32 );
     p = @tile.location
     @innerCircle = new THREE.Mesh circleGeometry, material
     @innerCircle.position.x = @coord[0]+p[0]
     @innerCircle.position.y = @coord[1]+p[1]
-    @innerCircle.position.z = TileWebGL.prefs.depth + 1
+    @innerCircle.position.z = TileWebGL.prefs.depth + 10
     @innerCircle['view'] = @
     @appView.addToScene(@innerCircle)
 

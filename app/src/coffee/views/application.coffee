@@ -27,7 +27,7 @@ class TileWebGL.Views.AppView
 
     # RENDERER
     if Detector.webgl
-      @renderer = new THREE.WebGLRenderer(antialias: false)
+      @renderer = new THREE.WebGLRenderer(antialias: true)
     else
       @renderer = new THREE.CanvasRenderer()
     @renderer.setSize SCREEN_WIDTH, SCREEN_HEIGHT
@@ -49,18 +49,12 @@ class TileWebGL.Views.AppView
 #    ambientLight = new THREE.AmbientLight(0xFFFFFF);
 #    @scene.add(ambientLight);
 
-    # LIGHT
-#    light = new THREE.PointLight(0xffffff)
-#    light.position.set 100, 100, 150
-#    @scene.add light
-
-
     dirLight = new THREE.PointLight(0xffffff);
     dirLight.position.set 200, 200, 150
     @scene.add(dirLight);
 
     dirLight = new THREE.PointLight(0xffffff);
-    dirLight.position.set 200, 200, -150
+    dirLight.position.set 0, 0, 300
     @scene.add(dirLight);
 
 
@@ -117,7 +111,6 @@ class TileWebGL.Views.AppView
     intersect = @raycastIntersects(coord)
     if intersect?
       intersect.object.view.mouseMove [intersect.point.x, intersect.point.y]
-      TileWebGL.activeLayerController().mouseMove([intersect.point.x, intersect.point.y])
 
   handleUpEvent: (coord) ->
     return if @ignoreMouseEvents
