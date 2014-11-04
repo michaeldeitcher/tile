@@ -27,8 +27,7 @@ class TileWebGL.Models.Layer
   processActions: ->
     while @actions.length > 0
       action = @actions.pop()
-      macro = TileWebGL.Models.Macro.recordingMacro()
-      macro.recordAction action if macro
+      TileWebGL.Models.Macro.processAction action
       @processAction action
 
   processAction: (d,elapsedTime=null) ->

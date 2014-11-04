@@ -72,6 +72,11 @@ Overlay.PlaneController = Overlay.MenuController.extend(
       TileWebGL.appController.replayCanvas()
     clear: ->
       TileWebGL.appController.clearStage()
+    macroPlay: ->
+      TileWebGL.Models.MacroReplay.stop = false
+      macro = TileWebGL.Models.Macro.recordingMacro()
+      d = {macro_id: macro.id}
+      TileWebGL.activeLayerController().layer.playMacro d
 
     menuSelectShow: ->
       if @selectMenuShown

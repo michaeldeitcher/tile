@@ -2,6 +2,10 @@ class TileWebGL.Models.Macro
   @_numMacros = 0
   @_macros = {}
 
+  @processAction: (d) ->
+    @startRecordingMacro() if d.action == 'addTile'
+    @_recordingMacro.recordAction d if @_recordingMacro
+
   @find: (id) ->
     @_macros[id]
 
@@ -56,12 +60,13 @@ class TileWebGL.Models.MacroReplay
 
   transposeAction: (pretransposed) ->
     d = $.extend({}, pretransposed)
-    if d.action == 'selectTileSegment' && @tileSegmentOffset?
-      d.segment += @tileSegmentOffset
-    if d.action == 'selectControlPoint' && @controlPointOffset?
-      d.id += @controlPointOffset
-    if d.action == 'addTile'
-      d.action = 'macroAddTileSegment'
+    switch d.action
+      when 'selectTileSegment', 'splitTileSegment'
+        d.segment += @tileSegmentOffset if @tileSegmentOffset
+      when 'selectControlPoint'
+        d.id += @controlPointOffset if @controlPointOffset?
+      when 'addTile'
+        d.action = 'macroAddTileSegment'
     d
 
   stop: ->
