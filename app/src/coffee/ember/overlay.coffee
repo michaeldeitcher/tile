@@ -15,14 +15,12 @@ Overlay.PlanesController = Ember.ArrayController.extend(
     if id?
       @transitionToRoute('plane', id)
     else
-      @private.createPlane()
+      plane = TileWebGL.Models.Plane.create()
+      TileWebGL.Models.Plane.save()
+      @transitionToRoute('plane', plane.id)
   ).property()
 
   actions:
-    createPlane: ->
-      @private.createPlane()
-
-  private:
     createPlane: ->
       plane = TileWebGL.Models.Plane.create()
       TileWebGL.Models.Plane.save()

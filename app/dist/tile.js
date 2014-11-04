@@ -485,20 +485,17 @@ Overlay.PlanesRoute = Ember.Route.extend({
 
 Overlay.PlanesController = Ember.ArrayController.extend({
   start: (function() {
-    var id;
+    var id, plane;
     id = TileWebGL.Models.Plane.getLastPlaneId();
     if (id != null) {
       return this.transitionToRoute('plane', id);
     } else {
-      return this["private"].createPlane();
+      plane = TileWebGL.Models.Plane.create();
+      TileWebGL.Models.Plane.save();
+      return this.transitionToRoute('plane', plane.id);
     }
   }).property(),
   actions: {
-    createPlane: function() {
-      return this["private"].createPlane();
-    }
-  },
-  "private": {
     createPlane: function() {
       var plane;
       plane = TileWebGL.Models.Plane.create();
@@ -1104,7 +1101,7 @@ TileWebGL.Models.Plane = (function() {
     if (id) {
       return JSON.parse(id);
     } else {
-      return -1;
+      return void 0;
     }
   };
 

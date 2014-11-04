@@ -17,16 +17,17 @@ body * {
     user-select: none;
 }
 
-ul#menu {
+ul.menu {
+    display: none;
     position: absolute;
     right: 5px;
     margin: 0;
     bottom: 0;
 }
-ul#menu a {
+ul.menu a {
     text-decoration: none;
 }
-ul#menu li {
+ul.menu li {
     width: 50px;
     height: 30px;
     margin-bottom: 5px;
@@ -35,8 +36,9 @@ ul#menu li {
     padding-top: 20px;
     text-align: center;
     list-style-type: none;
+    float: left;
 }
-ul#menu li:hover {
+ul.menu li:hover {
     background-color: #AD310B;
     -webkit-transition: background-color 500ms linear;
     -moz-transition: background-color 500ms linear;
@@ -44,14 +46,22 @@ ul#menu li:hover {
     -ms-transition: background-color 500ms linear;
     transition: background-color 500ms linear;
 }
-ul#menu li.blue {
+ul.menu li.blue {
     background-color: #0000FF;
 }
-ul#menu li.red {
+ul.menu li.red {
     background-color: #FF0000;
 }
-ul#menu li.white {
+ul.menu li.white {
     background-color: #999999;
+}
+
+ul.menu#menuSelect li {
+    float: none;
+}
+
+ul.menu#menuPlane {
+    display: block;
 }
 
 #overlay.pass-through {

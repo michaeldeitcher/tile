@@ -53,7 +53,7 @@ class TileWebGL.Models.Plane
     if id
       JSON.parse(id)
     else
-      -1
+      undefined
 
   @setLastPlaneId: (id) ->
     localStorage.setItem('lastPlaneId', JSON.stringify(id))
