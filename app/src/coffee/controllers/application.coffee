@@ -15,6 +15,12 @@ class TileWebGL.Controllers.AppController
   activeLayerController: ->
     TileWebGL.appController.layerControllers[0]
 
+  zoomIn: ->
+    @appView.adjustCameraPosition([0,0,-200])
+
+  zoomOut: ->
+    @appView.adjustCameraPosition([0,0,200])
+
   clearStage: ->
     @stage.clear()
     @start()

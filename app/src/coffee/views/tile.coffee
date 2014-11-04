@@ -38,6 +38,9 @@ class TileWebGL.Views.Tile
     segment.destroy() for segment in @segments
     controlPoint.destroy() for controlPoint in @controlPoints
 
+  tilePosZ: ->
+    @tile.id * 5
+
 class TileWebGL.Views.TileSegment
   constructor: (@tileView, @segmentIndex) ->
     @appView = TileWebGL.appView
@@ -66,28 +69,32 @@ class TileWebGL.Views.TileSegment
     @appView.removeFromScene(@segment)
 
   mouseMove: (coord) ->
-#    TileWebGL.activeLayerController().mouseMove coord
+    false
 
   mouseDown: (coord) ->
     @state = 'mousedown'
-#    TileWebGL.activeLayerController().mouseDown coord
+    true
 
   mouseUp: (coord) ->
     return unless @state is 'mousedown'
     selection = [@tile.id, @segmentIndex]
-    if @layerController.isCurrentSegmentSelected selection
+    if @layerController.isTileSelected selection
       @layerController.splitTileSegment selection
     else
       @layerController.selectTileSegment selection
       @tileView.selectTile()
     @state = undefined
+    true
+
+  tilePosZ: ->
+    @tileView.tilePosZ()
 
   geometry: ->
     geom = new THREE.Geometry()
     pointIndex = 0
     while pointIndex < @data.length
-      geom.vertices.push @vector3(pointIndex, TileWebGL.prefs.depth)
-      geom.vertices.push @vector3(pointIndex, 0)
+      geom.vertices.push @vector3(pointIndex, TileWebGL.prefs.depth + @tilePosZ())
+      geom.vertices.push @vector3(pointIndex, @tilePosZ())
       pointIndex++
     # front
     geom.faces.push( new THREE.Face3( 0,2,4) )
@@ -136,7 +143,7 @@ class TileWebGL.Views.ControlPoint
     @innerCircle = new THREE.Mesh circleGeometry, material
     @innerCircle.position.x = @coord[0]+p[0]
     @innerCircle.position.y = @coord[1]+p[1]
-    @innerCircle.position.z = TileWebGL.prefs.depth + 10
+    @innerCircle.position.z = TileWebGL.prefs.depth + @tileView.tilePosZ() + 10
     @innerCircle['view'] = @
     @appView.addToScene(@innerCircle)
 
@@ -147,7 +154,7 @@ class TileWebGL.Views.ControlPoint
     @outerCircle = new THREE.Mesh circleGeometry, material
     @outerCircle.position.x = @coord[0]+p[0]
     @outerCircle.position.y = @coord[1]+p[1]
-    @outerCircle.position.z = TileWebGL.prefs.depth + 1
+    @outerCircle.position.z = TileWebGL.prefs.depth + @tileView.tilePosZ() + 1
     @outerCircle['view'] = @
     @appView.addToScene(@outerCircle)
 
@@ -161,13 +168,15 @@ class TileWebGL.Views.ControlPoint
     @appView.removeFromScene(@outerCircle)
 
   mouseMove: (coord) ->
-#    TileWebGL.activeLayerController().mouseMove coord
+    false
 
   mouseDown: (coord) ->
     @layerController.controlPointMouseDown @id
+    true
 
   mouseUp: (coord) ->
     @layerController.controlPointMouseUp @id
+    true
 
   vector3: (pointIndex, depth) ->
     point = @data[pointIndex]

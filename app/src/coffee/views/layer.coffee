@@ -58,17 +58,11 @@ class TileWebGL.Views.Wall
     @appView.removeFromScene(@wall)
 
   mouseMove: (coord) ->
-    @layerController.mouseMove(coord)
-
+    false
   mouseDown: (coord) ->
-    @state = 'mousedown'
-
+    false
   mouseUp: (coord) ->
-    @layerController.controlPointMouseUp(0) if @layerController.controlPointMoving
-
-    return unless @state is 'mousedown'
-    @layerController.mouseUp(coord)
-    @state = null
+    false
 
 
 

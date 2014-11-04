@@ -17,13 +17,13 @@ window.TileWebGL = {
   config: {
     tile: {
       material: {
-        color: "#ff3300",
-        colorAmbient: "#FFFFFF",
-        colorEmissive: "#FFFFFF",
-        colorSpecular: "#FFFFFF",
+        color: "#ff3131",
+        colorAmbient: "#000000",
+        colorEmissive: "#000000",
+        colorSpecular: "#000000",
         shininess: 30,
         opacity: 1,
-        material: "Basic"
+        material: "Lambert"
       }
     }
   }
@@ -49,6 +49,14 @@ window.App = window.Overlay = Ember.Application.create();
 
   AppController.prototype.activeLayerController = function() {
     return TileWebGL.appController.layerControllers[0];
+  };
+
+  AppController.prototype.zoomIn = function() {
+    return this.appView.adjustCameraPosition([0, 0, -200]);
+  };
+
+  AppController.prototype.zoomOut = function() {
+    return this.appView.adjustCameraPosition([0, 0, 200]);
   };
 
   AppController.prototype.clearStage = function() {
@@ -163,12 +171,39 @@ window.App = window.Overlay = Ember.Application.create();
     return this.selectedTileSegment = null;
   };
 
-  LayerController.prototype.mouseMove = function(point) {
-    if (this.controlPointMoving) {
-      return this.processAction('moveControlPoint', {
-        coordinates: point
-      });
+  LayerController.prototype.setMaterial = function(material) {
+    return this.processAction('setMaterial', {
+      material: material
+    });
+  };
+
+  LayerController.prototype.selectTileSegment = function(selection) {
+    if (this.layer.segment) {
+      this.processAction('clearSelection');
     }
+    return this.processAction('selectTileSegment', {
+      tile: selection[0],
+      segment: selection[1]
+    });
+  };
+
+  LayerController.prototype.splitTileSegment = function(selection) {
+    this.processAction('splitTileSegment', {
+      tile: selection[0],
+      segment: selection[1]
+    });
+    return this.selectedControlPoint = null;
+  };
+
+  LayerController.prototype.isTileSelected = function(selection) {
+    if (!this.layer.tile) {
+      return false;
+    }
+    return this.layer.tile.id === selection[0];
+  };
+
+  LayerController.prototype.toggleWall = function() {
+    return this.layerView.showWall(this.layerView.wall == null);
   };
 
   LayerController.prototype.mouseUp = function(coord) {
@@ -184,49 +219,22 @@ window.App = window.Overlay = Ember.Application.create();
     }
   };
 
-  LayerController.prototype.setMaterial = function(material) {
-    return this.processAction('setMaterial', {
-      material: material
-    });
-  };
-
-  LayerController.prototype.selectTileSegment = function(selection) {
-    if (this.selectedTileSegment) {
-      this.processAction('clearSelection');
+  LayerController.prototype.mouseMove = function(point) {
+    if (this.controlPointMoving) {
+      this.processAction('moveControlPoint', {
+        coordinates: point
+      });
+      return this.controlPointMoved = true;
     }
-    this.selectedTileSegment = selection;
-    return this.processAction('selectTileSegment', {
-      tile: selection[0],
-      segment: selection[1]
-    });
-  };
-
-  LayerController.prototype.splitTileSegment = function(selection) {
-    this.processAction('splitTileSegment', {
-      tile: selection[0],
-      segment: selection[1]
-    });
-    return this.selectedControlPoint = null;
-  };
-
-  LayerController.prototype.isCurrentSegmentSelected = function(selection) {
-    if (this.selectedTileSegment == null) {
-      return false;
-    }
-    return this.selectedTileSegment[0] === selection[0] && this.selectedTileSegment[1] === selection[1];
-  };
-
-  LayerController.prototype.toggleWall = function() {
-    return this.layerView.showWall(this.layerView.wall == null);
   };
 
   LayerController.prototype.controlPointMouseDown = function(id) {
-    if (this.selectedControlPoint !== id) {
+    if (!this.layer.controlPoint || this.layer.controlPoint.id !== id) {
       this.processAction('selectControlPoint', {
         id: id
       });
-      this.selectedControlPoint = id;
-      return this.controlPointMoving = true;
+      this.controlPointMoving = true;
+      return this.controlPointMoved = false;
     }
   };
 
@@ -234,8 +242,12 @@ window.App = window.Overlay = Ember.Application.create();
     if (this.controlPointMoving) {
       return this.controlPointMoving = false;
     } else {
-      if (this.selectedControlPoint === id) {
-        return this.processAction('removeControlPoint');
+      if (this.layer.controlPoint && this.layer.controlPoint.id === id) {
+        if (this.controlPointMoved) {
+          return this.controlPointMoved = false;
+        } else {
+          return this.processAction('removeControlPoint');
+        }
       }
     }
   };
@@ -454,16 +466,15 @@ TileWebGL.Controllers.ControlPointController = (function() {
 })();
 
 //# sourceMappingURL=toolbar.js.map
-;var updateColor;
-
-Overlay.Router.map(function() {
+;Overlay.Router.map(function() {
   this.resource('planes', {
     path: "/"
   });
   this.resource('plane', {
     path: "/plane/:plane_id"
   });
-  return this.resource('commands');
+  this.resource('commands');
+  return this.resource('camera');
 });
 
 Overlay.PlanesRoute = Ember.Route.extend({
@@ -473,7 +484,21 @@ Overlay.PlanesRoute = Ember.Route.extend({
 });
 
 Overlay.PlanesController = Ember.ArrayController.extend({
+  start: (function() {
+    var id;
+    id = TileWebGL.Models.Plane.getLastPlaneId();
+    if (id != null) {
+      return this.transitionToRoute('plane', id);
+    } else {
+      return this["private"].createPlane();
+    }
+  }).property(),
   actions: {
+    createPlane: function() {
+      return this["private"].createPlane();
+    }
+  },
+  "private": {
     createPlane: function() {
       var plane;
       plane = TileWebGL.Models.Plane.create();
@@ -502,6 +527,13 @@ Overlay.MenuController = Ember.ObjectController.extend({
         $("ul#menu li:not('#menuToggle')").fadeIn();
         this.set('menuVisible', true);
         return this.set('menuToggleText', 'Hide Menu');
+      }
+    },
+    goBack: function() {
+      var id;
+      id = TileWebGL.Models.Plane.getLastPlaneId();
+      if (id > -1) {
+        return this.transitionToRoute('plane', id);
       }
     }
   }
@@ -534,31 +566,71 @@ Overlay.PlaneController = Overlay.MenuController.extend({
     },
     clear: function() {
       return TileWebGL.appController.clearStage();
+    },
+    menuSelectShow: function() {
+      if (this.selectMenuShown) {
+        this.selectMenuShown = false;
+        $('#menuPlane').fadeIn('fast');
+        return $('.menu:not("#menuPlane")').fadeOut('slow');
+      } else {
+        this.selectMenuShown = true;
+        return $('#menuSelect').fadeIn('fast');
+      }
+    },
+    menuCameraShow: function() {
+      $('#menuCamera').fadeIn('fast');
+      $('.menu:not("#menuCamera")').fadeOut('slow');
+      return this.selectMenuShown = false;
+    },
+    zoomIn: function() {
+      return TileWebGL.appController.zoomIn();
+    },
+    zoomOut: function() {
+      return TileWebGL.appController.zoomOut();
+    },
+    menuColorsShow: function() {
+      $('#menuColors').fadeIn('fast');
+      $('.menu:not("#menuColors")').fadeOut('slow');
+      return this.selectMenuShown = false;
+    },
+    red: function() {
+      return this["private"].updateColor('#FF0000');
+    },
+    blue: function() {
+      return this["private"].updateColor('#0000FF');
+    },
+    white: function() {
+      return this["private"].updateColor('#999999');
+    },
+    menuConfigShow: function() {
+      $('#menuConfig').fadeIn('fast');
+      $('.menu:not("#menuConfig")').fadeOut('slow');
+      return this.selectMenuShown = false;
+    },
+    tileDepthIncrease: function() {
+      return window.TileWebGL.depth += 5;
+    },
+    tileDepthDecrease: function() {
+      if (!(window.TileWebGL.depth < 5)) {
+        return window.TileWebGL.depth -= 5;
+      }
+    }
+  },
+  "private": {
+    updateColor: function(color) {
+      var layer, material;
+      layer = TileWebGL.activeLayerController().layer;
+      material = $.extend({}, layer.material);
+      material.color = color;
+      return TileWebGL.activeLayerController().processAction('setMaterial', {
+        material: material
+      });
     }
   }
 });
 
-updateColor = function(color) {
-  var layer, material;
-  layer = TileWebGL.activeLayerController().layer;
-  material = layer.material;
-  material.color = color;
-  return layer.setMaterial({
-    material: material
-  });
-};
-
 Overlay.CommandsController = Overlay.MenuController.extend({
   actions: {
-    red: function() {
-      return updateColor('#FF0000');
-    },
-    blue: function() {
-      return updateColor('#0000FF');
-    },
-    white: function() {
-      return updateColor('#999999');
-    },
     startRecording: function() {
       return TileWebGL.Models.Macro.startRecordingMacro();
     },
@@ -765,10 +837,11 @@ Overlay.CommandsController = Overlay.MenuController.extend({
     return this.tile && this.tile.id === tileId && this.segment && this.segment.id === segmentId;
   };
 
-  Layer.prototype.splitTileSegment = function() {
-    this.tile = this.tiles[this.tile.id];
-    this.segment = this.tile.getSegment(this.segment.id);
+  Layer.prototype.splitTileSegment = function(d) {
+    this.tile = this.tiles[d.tile];
+    this.segment = this.tile.getSegment(d.segment);
     this.segment.split();
+    this.controlPoint = null;
     return this.layerView.redrawTile(this.tile);
   };
 
@@ -962,6 +1035,20 @@ TileWebGL.Models.MacroReplay = (function() {
     return this.layers[0];
   };
 
+  Stage.setCameraPosition = function(position) {
+    return localStorage.setItem('camera', JSON.stringify(position));
+  };
+
+  Stage.getCameraPosition = function() {
+    var camera;
+    camera = localStorage.getItem('camera');
+    if (camera) {
+      return JSON.parse(camera);
+    } else {
+      return [0, 0, 3000];
+    }
+  };
+
   return Stage;
 
 })();
@@ -982,11 +1069,14 @@ TileWebGL.Models.Plane = (function() {
 
   Plane.find = function(id) {
     obj = this._planes[id];
-    console.log(obj);
+    if (obj != null) {
+      this.setLastPlaneId(id);
+    }
     return obj;
   };
 
   Plane.create = function() {
+    this.setLastPlaneId(this._planes.length);
     return new TileWebGL.Models.Plane();
   };
 
@@ -1008,11 +1098,25 @@ TileWebGL.Models.Plane = (function() {
     }));
   };
 
+  Plane.getLastPlaneId = function() {
+    var id;
+    id = localStorage.getItem('lastPlaneId');
+    if (id) {
+      return JSON.parse(id);
+    } else {
+      return -1;
+    }
+  };
+
+  Plane.setLastPlaneId = function(id) {
+    return localStorage.setItem('lastPlaneId', JSON.stringify(id));
+  };
+
   function Plane() {
     this.id = this.constructor._numPlanes;
     this.version = 'v0.2';
     this.date = new Date();
-    this.title = "Plane# " + this.id;
+    this.title = "P" + this.id;
     this.history = "";
     this.constructor._planes[this.id] = this;
     this.constructor._numPlanes++;
@@ -1283,9 +1387,13 @@ TileWebGL.Models.Tile = (function() {
   };
 
   Tile.prototype.controlPointData = function() {
-    var data, i, segment, _i, _ref;
+    var data, i, n, segment, _i, _ref;
+    n = this.numOfSegments();
     data = [];
-    for (i = _i = 0, _ref = this.numOfSegments() - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+    if (n < 1) {
+      return data;
+    }
+    for (i = _i = 0, _ref = n - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
       segment = this.getSegment(i);
       data = data.concat(segment.controlPointData());
     }
@@ -1530,55 +1638,88 @@ Geometry.checkLineIntersection = function(line1StartX, line1StartY, line1EndX, l
 ;TileWebGL.Views.AppView = (function() {
   function AppView() {
     TileWebGL.appView = this;
-    this.initThreejs();
-    this.overlayView = new TileWebGL.Views.Overlay();
-    this.animate();
-    this.registerEvents();
+    this.domContainer = document.getElementById("ThreeJS");
     this.objects = [];
+    this.createScene();
+    this.addLights();
+    this.registerEvents();
+    this.animate();
   }
 
-  AppView.prototype.initThreejs = function() {
-    var ASPECT, FAR, NEAR, SCREEN_HEIGHT, SCREEN_WIDTH, VIEW_ANGLE, container, dirLight;
+  AppView.prototype.createScene = function() {
     this.scene = new THREE.Scene();
-    SCREEN_WIDTH = window.innerWidth;
-    SCREEN_HEIGHT = window.innerHeight;
-    VIEW_ANGLE = 10;
-    ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT;
-    NEAR = 0.1;
-    FAR = 20000;
-    this.camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
-    this.scene.add(this.camera);
-    this.camera.position.set(0, 150, 3000);
-    this.camera.lookAt(this.scene.position);
-    if (Detector.webgl) {
-      this.renderer = new THREE.WebGLRenderer({
-        antialias: false
-      });
-    } else {
-      this.renderer = new THREE.CanvasRenderer();
-    }
-    this.renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-    container = document.getElementById("ThreeJS");
-    container.appendChild(this.renderer.domElement);
-    THREEx.WindowResize(this.renderer, this.camera);
-    THREEx.FullScreen.bindKey({
-      charCode: "m".charCodeAt(0)
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+    this.aspect = this.width / this.height;
+    this.near = 0.1;
+    this.far = 20000;
+    this.camera = new THREE.PerspectiveCamera(10, this.aspect, this.near, this.far);
+    this.updateCameraPosition();
+    this.projector = new THREE.Projector();
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true
     });
+    this.renderer.setSize(this.width, this.height);
+    return this.domContainer.appendChild(this.renderer.domElement);
+  };
+
+  AppView.prototype.animate = function() {
+    requestAnimationFrame(TileWebGL.appView.animate);
+    TileWebGL.appView.render();
+    return TileWebGL.appView.update();
+  };
+
+  AppView.prototype.render = function() {
+    return this.renderer.render(this.scene, this.camera);
+  };
+
+  AppView.prototype.update = function() {
+    if (this.controls != null) {
+      this.controls.update();
+    }
+    if (this.stats != null) {
+      return this.stats.update();
+    }
+  };
+
+  AppView.prototype.updateCameraPosition = function() {
+    var pos;
+    if (this.cameraPosition == null) {
+      this.cameraPosition = TileWebGL.Models.Stage.getCameraPosition();
+    }
+    pos = this.cameraPosition;
+    this.camera.position.set(pos[0], pos[1], pos[2]);
+    return this.camera.lookAt(this.scene.position);
+  };
+
+  AppView.prototype.adjustCameraPosition = function(delta) {
+    this.cameraPosition[0] += delta[0];
+    this.cameraPosition[1] += delta[1];
+    this.cameraPosition[2] += delta[2];
+    this.updateCameraPosition();
+    return TileWebGL.Models.Stage.setCameraPosition(this.cameraPosition);
+  };
+
+  AppView.prototype.addLights = function() {
+    var dirLight;
     dirLight = new THREE.PointLight(0xffffff);
     dirLight.position.set(200, 200, 150);
     this.scene.add(dirLight);
     dirLight = new THREE.PointLight(0xffffff);
-    dirLight.position.set(200, 200, -150);
-    this.scene.add(dirLight);
-    return this.projector = new THREE.Projector();
+    dirLight.position.set(0, 0, 300);
+    return this.scene.add(dirLight);
   };
 
-  AppView.prototype.enableOrbitControls = function() {
-    return this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-  };
-
-  AppView.prototype.disableOrbitControls = function() {
-    return this.controls = null;
+  AppView.prototype.toggleStats = function() {
+    if (this.stats) {
+      return this.domContainer.removeChild(this.stats.domElement);
+    } else {
+      this.stats = new Stats();
+      this.stats.domElement.style.position = "absolute";
+      this.stats.domElement.style.bottom = "0px";
+      this.stats.domElement.style.zIndex = 100;
+      return this.domContainer.appendChild(this.stats.domElement);
+    }
   };
 
   AppView.prototype.addToScene = function(threeMeshObject) {
@@ -1595,29 +1736,12 @@ Geometry.checkLineIntersection = function(line1StartX, line1StartY, line1EndX, l
     }
   };
 
-  AppView.prototype.copyTouch = function(touch) {
-    return {
-      identifier: touch.identifier,
-      pageX: touch.pageX,
-      pageY: touch.pageY
-    };
-  };
-
-  AppView.prototype.touchStart = function(touch) {
-    this.touches[touch.identifier] = touch;
-    return this.handleDownEvent([touch.pageX, touch.pageY]);
-  };
-
-  AppView.prototype.touchMove = function(touch) {
-    return this.handleMoveEvent([touch.pageX, touch.pageY]);
-  };
-
-  AppView.prototype.touchEnd = function(touch) {
-    return this.handleUpEvent([touch.pageX, touch.pageY]);
-  };
-
   AppView.prototype.registerEvents = function() {
     var el;
+    THREEx.WindowResize(this.renderer, this.camera);
+    THREEx.FullScreen.bindKey({
+      charCode: "m".charCodeAt(0)
+    });
     this.touches = {};
     el = this.renderer.domElement;
     if (Modernizr.touch) {
@@ -1688,23 +1812,49 @@ Geometry.checkLineIntersection = function(line1StartX, line1StartY, line1EndX, l
     }
   };
 
+  AppView.prototype.copyTouch = function(touch) {
+    return {
+      identifier: touch.identifier,
+      pageX: touch.pageX,
+      pageY: touch.pageY
+    };
+  };
+
+  AppView.prototype.touchStart = function(touch) {
+    this.touches[touch.identifier] = touch;
+    return this.handleDownEvent([touch.pageX, touch.pageY]);
+  };
+
+  AppView.prototype.touchMove = function(touch) {
+    return this.handleMoveEvent([touch.pageX, touch.pageY]);
+  };
+
+  AppView.prototype.touchEnd = function(touch) {
+    return this.handleUpEvent([touch.pageX, touch.pageY]);
+  };
+
   AppView.prototype.handleMoveEvent = function(coord) {
-    var intersect;
+    var intersect, layerController;
     intersect = this.raycastIntersects(coord);
     if (intersect != null) {
-      intersect.object.view.mouseMove([intersect.point.x, intersect.point.y]);
-      return TileWebGL.activeLayerController().mouseMove([intersect.point.x, intersect.point.y]);
+      if (!intersect.object.view.mouseMove([intersect.point.x, intersect.point.y])) {
+        layerController = TileWebGL.appController.activeLayerController();
+        return layerController.mouseMove([intersect.point.x, intersect.point.y]);
+      }
     }
   };
 
   AppView.prototype.handleUpEvent = function(coord) {
-    var intersect;
+    var intersect, layerController;
     if (this.ignoreMouseEvents) {
       return;
     }
     intersect = this.raycastIntersects(coord);
     if (intersect != null) {
-      return intersect.object.view.mouseUp([intersect.point.x, intersect.point.y]);
+      if (!intersect.object.view.mouseUp([intersect.point.x, intersect.point.y])) {
+        layerController = TileWebGL.appController.activeLayerController();
+        return layerController.mouseUp([intersect.point.x, intersect.point.y]);
+      }
     }
   };
 
@@ -1713,35 +1863,6 @@ Geometry.checkLineIntersection = function(line1StartX, line1StartY, line1EndX, l
     intersect = this.raycastIntersects(coord);
     if (intersect != null) {
       return intersect.object.view.mouseDown([intersect.point.x, intersect.point.y]);
-    }
-  };
-
-  AppView.prototype.enableOrbitControls = function() {
-    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-    return this.ignoreMouseEvents = true;
-  };
-
-  AppView.prototype.disableOrbitControls = function() {
-    this.controls = null;
-    return this.ignoreMouseEvents = false;
-  };
-
-  AppView.prototype.animate = function() {
-    requestAnimationFrame(TileWebGL.appView.animate);
-    TileWebGL.appView.render();
-    return TileWebGL.appView.update();
-  };
-
-  AppView.prototype.render = function() {
-    return this.renderer.render(this.scene, this.camera);
-  };
-
-  AppView.prototype.update = function() {
-    if (this.controls != null) {
-      this.controls.update();
-    }
-    if (this.stats != null) {
-      return this.stats.update();
     }
   };
 
@@ -1839,6 +1960,7 @@ Geometry.checkLineIntersection = function(line1StartX, line1StartY, line1EndX, l
 TileWebGL.Views.Wall = (function() {
   function Wall() {
     this.appView = TileWebGL.appView;
+    this.layerController = TileWebGL.activeLayerController();
   }
 
   Wall.prototype.create = function() {
@@ -1858,18 +1980,16 @@ TileWebGL.Views.Wall = (function() {
     return this.appView.removeFromScene(this.wall);
   };
 
-  Wall.prototype.mouseMove = function(coord) {};
+  Wall.prototype.mouseMove = function(coord) {
+    return false;
+  };
 
   Wall.prototype.mouseDown = function(coord) {
-    return this.state = 'mousedown';
+    return false;
   };
 
   Wall.prototype.mouseUp = function(coord) {
-    if (this.state !== 'mousedown') {
-      return;
-    }
-    TileWebGL.activeLayerController().mouseUp(coord);
-    return this.state = null;
+    return false;
   };
 
   return Wall;
@@ -2013,6 +2133,10 @@ ThreeView = (function() {
     return _results;
   };
 
+  Tile.prototype.tilePosZ = function() {
+    return this.tile.id * 5;
+  };
+
   return Tile;
 
 })();
@@ -2055,10 +2179,13 @@ TileWebGL.Views.TileSegment = (function() {
     return this.appView.removeFromScene(this.segment);
   };
 
-  TileSegment.prototype.mouseMove = function(coord) {};
+  TileSegment.prototype.mouseMove = function(coord) {
+    return false;
+  };
 
   TileSegment.prototype.mouseDown = function(coord) {
-    return this.state = 'mousedown';
+    this.state = 'mousedown';
+    return true;
   };
 
   TileSegment.prototype.mouseUp = function(coord) {
@@ -2067,13 +2194,18 @@ TileWebGL.Views.TileSegment = (function() {
       return;
     }
     selection = [this.tile.id, this.segmentIndex];
-    if (this.layerController.isCurrentSegmentSelected(selection)) {
+    if (this.layerController.isTileSelected(selection)) {
       this.layerController.splitTileSegment(selection);
     } else {
       this.layerController.selectTileSegment(selection);
       this.tileView.selectTile();
     }
-    return this.state = void 0;
+    this.state = void 0;
+    return true;
+  };
+
+  TileSegment.prototype.tilePosZ = function() {
+    return this.tileView.tilePosZ();
   };
 
   TileSegment.prototype.geometry = function() {
@@ -2081,8 +2213,8 @@ TileWebGL.Views.TileSegment = (function() {
     geom = new THREE.Geometry();
     pointIndex = 0;
     while (pointIndex < this.data.length) {
-      geom.vertices.push(this.vector3(pointIndex, TileWebGL.prefs.depth));
-      geom.vertices.push(this.vector3(pointIndex, 0));
+      geom.vertices.push(this.vector3(pointIndex, TileWebGL.prefs.depth + this.tilePosZ()));
+      geom.vertices.push(this.vector3(pointIndex, this.tilePosZ()));
       pointIndex++;
     }
     geom.faces.push(new THREE.Face3(0, 2, 4));
@@ -2119,38 +2251,65 @@ TileWebGL.Views.ControlPoint = (function() {
     this.id = id;
     this.appView = TileWebGL.appView;
     this.layerController = TileWebGL.activeLayerController();
+    this.layer = this.layerController.layer;
     this.tile = this.tileView.tile;
     this;
   }
 
-  ControlPoint.prototype.create = function() {
+  ControlPoint.prototype.createInnerCircle = function() {
+    var circleGeometry, material, p;
+    material = new THREE.MeshLambertMaterial({
+      emissive: 0x202020
+    });
+    circleGeometry = new THREE.RingGeometry(8, 14, 32);
+    p = this.tile.location;
+    this.innerCircle = new THREE.Mesh(circleGeometry, material);
+    this.innerCircle.position.x = this.coord[0] + p[0];
+    this.innerCircle.position.y = this.coord[1] + p[1];
+    this.innerCircle.position.z = TileWebGL.prefs.depth + this.tileView.tilePosZ() + 10;
+    this.innerCircle['view'] = this;
+    return this.appView.addToScene(this.innerCircle);
+  };
+
+  ControlPoint.prototype.createOuterCircle = function() {
     var circleGeometry, material, p;
     material = new THREE.MeshBasicMaterial({
-      color: 0xFFFFFF
+      transparent: true,
+      opacity: 0.0
     });
-    circleGeometry = new THREE.CircleGeometry(10, 32);
+    circleGeometry = new THREE.CircleGeometry(20, 32);
     p = this.tile.location;
-    this.controlPoint = new THREE.Mesh(circleGeometry, material);
-    this.controlPoint.position.x = this.coord[0] + p[0];
-    this.controlPoint.position.y = this.coord[1] + p[1];
-    this.controlPoint.position.z = 20;
-    this.controlPoint['view'] = this;
-    this.appView.addToScene(this.controlPoint);
+    this.outerCircle = new THREE.Mesh(circleGeometry, material);
+    this.outerCircle.position.x = this.coord[0] + p[0];
+    this.outerCircle.position.y = this.coord[1] + p[1];
+    this.outerCircle.position.z = TileWebGL.prefs.depth + this.tileView.tilePosZ() + 1;
+    this.outerCircle['view'] = this;
+    return this.appView.addToScene(this.outerCircle);
+  };
+
+  ControlPoint.prototype.create = function() {
+    this.createInnerCircle();
+    this.createOuterCircle();
     return this;
   };
 
   ControlPoint.prototype.destroy = function() {
-    return this.appView.removeFromScene(this.controlPoint);
+    this.appView.removeFromScene(this.innerCircle);
+    return this.appView.removeFromScene(this.outerCircle);
   };
 
-  ControlPoint.prototype.mouseMove = function(coord) {};
+  ControlPoint.prototype.mouseMove = function(coord) {
+    return false;
+  };
 
   ControlPoint.prototype.mouseDown = function(coord) {
-    return this.layerController.controlPointMouseDown(this.id);
+    this.layerController.controlPointMouseDown(this.id);
+    return true;
   };
 
   ControlPoint.prototype.mouseUp = function(coord) {
-    return this.layerController.controlPointMouseUp(this.id);
+    this.layerController.controlPointMouseUp(this.id);
+    return true;
   };
 
   ControlPoint.prototype.vector3 = function(pointIndex, depth) {

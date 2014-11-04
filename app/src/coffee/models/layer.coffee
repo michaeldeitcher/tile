@@ -107,10 +107,11 @@ class TileWebGL.Models.Layer
   isSegmentSelected: (tileId, segmentId) ->
     @tile && @tile.id == tileId && @segment && @segment.id == segmentId
 
-  splitTileSegment: ->
-    @tile = @tiles[@tile.id]
-    @segment = @tile.getSegment(@segment.id)
+  splitTileSegment: (d) ->
+    @tile = @tiles[d.tile]
+    @segment = @tile.getSegment(d.segment)
     @segment.split()
+    @controlPoint = null
     @layerView.redrawTile(@tile)
 
   selectControlPoint: (d) ->

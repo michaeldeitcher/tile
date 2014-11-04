@@ -28,17 +28,41 @@
                 {{/each}}
                 {{someString}}
             </ul>
+            {{start}}
 
         </script>
 
         <script type="text/x-handlebars" data-template-name="plane">
-            <ul id="menu">
-                <li>{{title}}</li>
+            <ul class="menu horizontal" id="menuMini">
+                <li {{action 'menuSelectShow'}}>{{title}}</li>
+            </ul>
+            <ul class="menu horizontal" id="menuPlane">
                 <li {{action 'save'}} >Save</li>
                 <li {{action 'replay'}} >Replay</li>
                 <li {{action 'clear'}} >Clear</li>
-                {{#link-to 'commands'}}<li>Commands</li>{{/link-to}}
-                <li id="menuToggle" {{action 'menuToggle'}}>{{menuToggleText}}</li>
+                <li {{action 'menuSelectShow'}}>{{title}}</li>
+            </ul>
+            <ul class="menu horizontal" id="menuCamera">
+                <li {{action 'zoomIn'}} >Zoom In</li>
+                <li {{action 'zoomOut'}} >Zoom Out</li>
+                <li {{action 'menuSelectShow'}}>{{title}}</li>
+            </ul>
+            <ul class="menu horizontal" id="menuColors">
+                <li class="red" {{action 'red'}}></li>
+                <li class="blue" {{action 'blue'}}></li>
+                <li class="white" {{action 'white'}}></li>
+                <li {{action 'menuSelectShow'}}>{{title}}</li>
+            </ul>
+            <ul class="menu horizontal" id="menuConfig">
+                <li {{action 'tileDepthIncrease'}} >D++</li>
+                <li {{action 'tileDepthDecrease'}} >D--</li>
+                <li {{action 'menuSelectShow'}}>{{title}}</li>
+            </ul>
+            <ul class="menu vertical" id="menuSelect">
+                <li {{action 'menuCameraShow'}} >Camera</li>
+                <li {{action 'menuColorsShow'}} >Colors</li>
+                <li {{action 'menuConfigShow'}} >Config</li>
+                <li {{action 'menuSelectShow'}}>{{title}}</li>
             </ul>
             {{start}}
         </script>
@@ -47,9 +71,6 @@
             <ul id="menu">
                 <li {{action 'startRecording'}} >Start Recording</li>
                 <li {{action 'play'}} >Play</li>
-                <li class="red" {{action 'red'}}></li>
-                <li class="blue" {{action 'blue'}}></li>
-                <li class="white" {{action 'white'}}></li>
                 <li id="menuToggle" {{action 'menuToggle'}}>{{menuToggleText}}</li>
             </ul>
             {{start}}

@@ -11,6 +11,16 @@ class TileWebGL.Models.Stage
   activeLayer: ->
     @layers[0]
 
+  @setCameraPosition: (position) ->
+    localStorage.setItem('camera', JSON.stringify(position))
+
+  @getCameraPosition: ->
+    camera = localStorage.getItem('camera')
+    if camera
+      JSON.parse(camera)
+    else
+      [0, 0, 3000]
+
 class TileWebGL.Models.Plane
   planes = localStorage.getItem('planes')
   if planes
@@ -23,10 +33,11 @@ class TileWebGL.Models.Plane
 
   @find: (id) ->
     obj = @_planes[id]
-    console.log obj
+    @setLastPlaneId(id) if obj?
     obj
 
   @create: ->
+    @setLastPlaneId(@_planes.length)
     new TileWebGL.Models.Plane()
 
   @all: ->
@@ -37,11 +48,21 @@ class TileWebGL.Models.Plane
   @save: ->
     localStorage.setItem('planes', JSON.stringify({numPlanes: @_numPlanes, planes: @_planes}))
 
+  @getLastPlaneId: ->
+    id = localStorage.getItem('lastPlaneId')
+    if id
+      JSON.parse(id)
+    else
+      -1
+
+  @setLastPlaneId: (id) ->
+    localStorage.setItem('lastPlaneId', JSON.stringify(id))
+
   constructor: ->
     @id = @constructor._numPlanes
     @version = 'v0.2'
     @date = new Date()
-    @title = "Plane# #{@id}"
+    @title = "P#{@id}"
     @history = ""
     @constructor._planes[@id] = @
     @constructor._numPlanes++

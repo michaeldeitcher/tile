@@ -2,6 +2,7 @@ Overlay.Router.map ->
   @resource 'planes', { path: "/"}
   @resource 'plane', { path: "/plane/:plane_id" }
   @resource 'commands'
+  @resource 'camera'
 
 Overlay.PlanesRoute = Ember.Route.extend(
   model: (params) ->
@@ -9,7 +10,19 @@ Overlay.PlanesRoute = Ember.Route.extend(
 )
 
 Overlay.PlanesController = Ember.ArrayController.extend(
+  start: (->
+    id = TileWebGL.Models.Plane.getLastPlaneId()
+    if id?
+      @transitionToRoute('plane', id)
+    else
+      @private.createPlane()
+  ).property()
+
   actions:
+    createPlane: ->
+      @private.createPlane()
+
+  private:
     createPlane: ->
       plane = TileWebGL.Models.Plane.create()
       TileWebGL.Models.Plane.save()
@@ -35,6 +48,9 @@ Overlay.MenuController = Ember.ObjectController.extend(
         $("ul#menu li:not('#menuToggle')").fadeIn()
         @set('menuVisible', true)
         @set('menuToggleText', 'Hide Menu')
+    goBack: ->
+      id = TileWebGL.Models.Plane.getLastPlaneId()
+      @transitionToRoute('plane', id) if id > -1
 )
 
 Overlay.PlaneController = Overlay.MenuController.extend(
@@ -58,22 +74,58 @@ Overlay.PlaneController = Overlay.MenuController.extend(
       TileWebGL.appController.replayCanvas()
     clear: ->
       TileWebGL.appController.clearStage()
-)
 
-updateColor = (color) ->
-  layer = TileWebGL.activeLayerController().layer
-  material = $.extend({}, layer.material)
-  material.color = color
-  TileWebGL.activeLayerController().processAction 'setMaterial', {material: material}
+    menuSelectShow: ->
+      if @selectMenuShown
+        @selectMenuShown = false
+        $('#menuPlane').fadeIn('fast')
+        $('.menu:not("#menuPlane")').fadeOut('slow')
+      else
+        @selectMenuShown = true
+        $('#menuSelect').fadeIn('fast')
+
+    menuCameraShow: ->
+      $('#menuCamera').fadeIn('fast')
+      $('.menu:not("#menuCamera")').fadeOut('slow')
+      @selectMenuShown = false
+    zoomIn: ->
+      TileWebGL.appController.zoomIn()
+    zoomOut: ->
+      TileWebGL.appController.zoomOut()
+
+
+    menuColorsShow: ->
+      $('#menuColors').fadeIn('fast')
+      $('.menu:not("#menuColors")').fadeOut('slow')
+      @selectMenuShown = false
+    red: ->
+      @private.updateColor '#FF0000'
+    blue: ->
+      @private.updateColor '#0000FF'
+    white: ->
+      @private.updateColor '#999999'
+
+    menuConfigShow: ->
+      $('#menuConfig').fadeIn('fast')
+      $('.menu:not("#menuConfig")').fadeOut('slow')
+      @selectMenuShown = false
+    tileDepthIncrease: ->
+      window.TileWebGL.depth += 5
+    tileDepthDecrease: ->
+      window.TileWebGL.depth -= 5 unless window.TileWebGL.depth < 5
+
+  private:
+    updateColor: (color) ->
+      layer = TileWebGL.activeLayerController().layer
+      material = $.extend({}, layer.material)
+      material.color = color
+      TileWebGL.activeLayerController().processAction 'setMaterial', {material: material}
+
+)
 
 Overlay.CommandsController = Overlay.MenuController.extend(
   actions:
-    red: ->
-      updateColor '#FF0000'
-    blue: ->
-      updateColor '#0000FF'
-    white: ->
-      updateColor '#999999'
+
     startRecording: ->
       TileWebGL.Models.Macro.startRecordingMacro()
 

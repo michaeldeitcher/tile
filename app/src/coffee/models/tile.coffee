@@ -144,8 +144,10 @@ class TileWebGL.Models.Tile
     new TileWebGL.Models.ControlPoint(@, id)
 
   controlPointData: ->
+    n = @numOfSegments()
     data = []
-    for i in [0..@numOfSegments()-1]
+    return data if n < 1
+    for i in [0..n-1]
       segment = @getSegment(i)
       data = data.concat segment.controlPointData()
     data
