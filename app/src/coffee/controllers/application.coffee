@@ -39,6 +39,11 @@ class TileWebGL.Controllers.AppController
     @lastState = @changeState('replay')
     @activeLayerController().layer.animateHistory(history.reverse())
 
+  enterReceiveState: ->
+    @stage.clear()
+    @start()
+    @changeState('receive')
+
   replayCanvas: ->
     @stage.clear()
     history = @activeLayerController().layer.history
@@ -65,7 +70,7 @@ class TileWebGL.Controllers.AppController
 
 #### STATE MACHINE
   initStateMachine: ->
-    @states = ['init', 'create', 'replay', 'show']
+    @states = ['init', 'create', 'replay', 'show', 'receive']
     @stateHandlers = []
     @changeState('init')
 

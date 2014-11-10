@@ -32,6 +32,119 @@ window.TileWebGL = {
 window.App = window.Overlay = Ember.Application.create();
 
 //# sourceMappingURL=abc.js.map
+;var Message;
+
+Message = (function() {
+  function Message() {
+    this._$message = $('#message');
+  }
+
+  Message.prototype.setMessageText = function(text, cssClass) {
+    if (cssClass == null) {
+      cssClass = '';
+    }
+    this._$message.text(text);
+    return this._$message.attr('class', cssClass);
+  };
+
+  return Message;
+
+})();
+
+TileWebGL.Controllers.WebSock = (function() {
+  function WebSock() {
+    this._actionsToSend = [];
+    this._actionsReceived = [];
+  }
+
+  WebSock.prototype.sendAction = function(d) {
+    var elapsedTime, now;
+    now = new Date().getTime();
+    elapsedTime = this.lastTime != null ? now - this.lastTime : 0;
+    return this._actionsToSend.push([d, elapsedTime]);
+  };
+
+  WebSock.prototype.sendActions = function() {
+    var processActionsToSend;
+    processActionsToSend = (function(_this) {
+      return function() {
+        if (_this._actionsToSend.length > 0) {
+          _this.socket.send(JSON.stringify(_this._actionsToSend));
+          _this.numActionsSent += _this._actionsToSend.length;
+          new Message().setMessageText('S: ' + _this.numActionsSent);
+          _this._actionsToSend = [];
+          return setTimeout(processActionsToSend, 10);
+        } else {
+          return setTimeout(processActionsToSend, 10);
+        }
+      };
+    })(this);
+    return processActionsToSend();
+  };
+
+  WebSock.prototype.startSending = function() {
+    this.numActionsSent = 0;
+    new Message().setMessageText('Connecting to server..');
+    this.socket = new WebSocket("ws://protected-citadel-9552.herokuapp.com");
+    this.socket.onerror = (function(_this) {
+      return function() {
+        return new Message().setMessageText('Connection failure', 'error');
+      };
+    })(this);
+    return this.socket.onopen = (function(_this) {
+      return function() {
+        new Message().setMessageText('Connected and sending..');
+        _this.socket.send('sending');
+        return _this.sendActions();
+      };
+    })(this);
+  };
+
+  WebSock.prototype.startReceiving = function() {
+    var processAction;
+    this.numActionsReceived = 0;
+    this.actions = [];
+    processAction = (function(_this) {
+      return function() {
+        var timeOut;
+        TileWebGL.activeLayerController().layer.processAction(_this.action[0]);
+        _this.action = _this.actions.pop();
+        if (_this.action != null) {
+          timeOut = _this.action[1] > 250 ? 250 : _this.action[1];
+          return setTimeout(processAction, timeOut);
+        }
+      };
+    })(this);
+    new Message().setMessageText('Connecting to server..');
+    this.socket = new WebSocket("ws://protected-citadel-9552.herokuapp.com");
+    this.actions = [];
+    this.socket.onerror = (function(_this) {
+      return function() {
+        return new Message().setMessageText('Connection failure', 'error');
+      };
+    })(this);
+    return this.socket.onopen = (function(_this) {
+      return function() {
+        new Message().setMessageText('Connected and receiving..');
+        _this.socket.send('receiving');
+        return _this.socket.onmessage = function(event) {
+          _this.actions = _this.actions.concat(JSON.parse(event.data));
+          _this.numActionsReceived += _this.actions.length;
+          new Message().setMessageText('R: ' + _this.numActionsReceived);
+          _this.action = _this.actions.pop();
+          return processAction();
+        };
+      };
+    })(this);
+  };
+
+  return WebSock;
+
+})();
+
+TileWebGL.api = new TileWebGL.Controllers.WebSock();
+
+//# sourceMappingURL=api.js.map
 ;TileWebGL.Controllers.AppController = (function() {
   function AppController(state) {
     TileWebGL.appController = this;
@@ -82,6 +195,12 @@ window.App = window.Overlay = Ember.Application.create();
     return this.activeLayerController().layer.animateHistory(history.reverse());
   };
 
+  AppController.prototype.enterReceiveState = function() {
+    this.stage.clear();
+    this.start();
+    return this.changeState('receive');
+  };
+
   AppController.prototype.replayCanvas = function() {
     var history, lastState;
     this.stage.clear();
@@ -119,7 +238,7 @@ window.App = window.Overlay = Ember.Application.create();
   };
 
   AppController.prototype.initStateMachine = function() {
-    this.states = ['init', 'create', 'replay', 'show'];
+    this.states = ['init', 'create', 'replay', 'show', 'receive'];
     this.stateHandlers = [];
     return this.changeState('init');
   };
@@ -259,6 +378,15 @@ window.App = window.Overlay = Ember.Application.create();
     d['action'] = action;
     this.layer.addAction(d);
     return this.layer.processActions();
+  };
+
+  LayerController.prototype.playMacro = function() {
+    var d, macro;
+    macro = TileWebGL.Models.Macro.recordingMacro();
+    d = {
+      macro_id: macro.id
+    };
+    return this.processAction('playMacro', d);
   };
 
   return LayerController;
@@ -466,15 +594,16 @@ TileWebGL.Controllers.ControlPointController = (function() {
 })();
 
 //# sourceMappingURL=toolbar.js.map
-;Overlay.Router.map(function() {
+;var channel, pusher;
+
+Overlay.Router.map(function() {
   this.resource('planes', {
     path: "/"
   });
   this.resource('plane', {
     path: "/plane/:plane_id"
   });
-  this.resource('commands');
-  return this.resource('camera');
+  return this.resource('receive');
 });
 
 Overlay.PlanesRoute = Ember.Route.extend({
@@ -536,6 +665,10 @@ Overlay.MenuController = Ember.ObjectController.extend({
   }
 });
 
+pusher = null;
+
+channel = null;
+
 Overlay.PlaneController = Overlay.MenuController.extend({
   start: (function() {
     var history, model;
@@ -548,6 +681,7 @@ Overlay.PlaneController = Overlay.MenuController.extend({
       if (history.length > 0) {
         TileWebGL.appController.replayHistoryString(history);
       }
+      TileWebGL.api.startSending();
     }
     return '';
   }).property(),
@@ -563,6 +697,9 @@ Overlay.PlaneController = Overlay.MenuController.extend({
     },
     clear: function() {
       return TileWebGL.appController.clearStage();
+    },
+    macroPlay: function() {
+      return TileWebGL.activeLayerController().playMacro();
     },
     menuSelectShow: function() {
       if (this.selectMenuShown) {
@@ -599,18 +736,16 @@ Overlay.PlaneController = Overlay.MenuController.extend({
     white: function() {
       return this["private"].updateColor('#999999');
     },
-    menuConfigShow: function() {
-      $('#menuConfig').fadeIn('fast');
-      $('.menu:not("#menuConfig")').fadeOut('slow');
+    menuPeerConfigShow: function() {
+      $('#menuPeerConfig').fadeIn('fast');
+      $('.menu:not("#menuPeerConfig")').fadeOut('slow');
       return this.selectMenuShown = false;
     },
-    tileDepthIncrease: function() {
-      return window.TileWebGL.depth += 5;
+    becomeSender: function() {
+      return TileWebGL.api.startSending();
     },
-    tileDepthDecrease: function() {
-      if (!(window.TileWebGL.depth < 5)) {
-        return window.TileWebGL.depth -= 5;
-      }
+    becomeReceiver: function() {
+      return TileWebGL.api.startReceiving();
     }
   },
   "private": {
@@ -626,24 +761,15 @@ Overlay.PlaneController = Overlay.MenuController.extend({
   }
 });
 
-Overlay.CommandsController = Overlay.MenuController.extend({
-  actions: {
-    startRecording: function() {
-      return TileWebGL.Models.Macro.startRecordingMacro();
-    },
-    play: function() {
-      var d, macro;
-      TileWebGL.Models.MacroReplay.stop = false;
-      macro = TileWebGL.Models.Macro.recordingMacro();
-      d = {
-        macro_id: macro.id
-      };
-      return TileWebGL.activeLayerController().layer.playMacro(d);
-    },
-    stop: function() {
-      return TileWebGL.Models.MacroReplay.stop = true;
+Overlay.ReceiveController = Ember.ObjectController.extend({
+  start: (function() {
+    if (!this.started) {
+      TileWebGL.appController.start();
+      TileWebGL.api.startReceiving();
+      this.started = true;
     }
-  }
+    return '';
+  }).property()
 });
 
 //# sourceMappingURL=overlay.js.map
@@ -666,14 +792,24 @@ Overlay.CommandsController = Overlay.MenuController.extend({
     this.segment = null;
     this.controlPoint = null;
     this.material = TileWebGL.config.tile.material;
+    this.state = 'create';
+    this.initializeStateMachine();
   }
+
+  Layer.prototype.initializeStateMachine = function() {
+    return TileWebGL.appController.onStateChange((function(_this) {
+      return function(state) {
+        return _this.state = state;
+      };
+    })(this));
+  };
 
   Layer.prototype.clear = function() {
     this.layerView.clear();
-    this.tiles = [];
     this.tile = null;
     this.segment = null;
-    return this.controlPoint = null;
+    this.controlPoint = null;
+    return this.tiles = [];
   };
 
   Layer.prototype.addAction = function(action) {
@@ -686,14 +822,11 @@ Overlay.CommandsController = Overlay.MenuController.extend({
   };
 
   Layer.prototype.processActions = function() {
-    var action, macro, _results;
+    var action, _results;
     _results = [];
     while (this.actions.length > 0) {
       action = this.actions.pop();
-      macro = TileWebGL.Models.Macro.recordingMacro();
-      if (macro) {
-        macro.recordAction(action);
-      }
+      TileWebGL.api.sendAction(action);
       _results.push(this.processAction(action));
     }
     return _results;
@@ -704,9 +837,7 @@ Overlay.CommandsController = Overlay.MenuController.extend({
     if (elapsedTime == null) {
       elapsedTime = null;
     }
-    if (d.action !== 'moveControlPoint') {
-      console.log(d);
-    }
+    TileWebGL.Models.Macro.processAction(d);
     if (this.version === '0.01') {
       p = d.coordinates;
       if (p) {
@@ -755,6 +886,9 @@ Overlay.CommandsController = Overlay.MenuController.extend({
         break;
       default:
         throw 'unsupported action';
+    }
+    if (this.state !== 'create') {
+      return;
     }
     if (elapsedTime == null) {
       now = new Date().getTime();
@@ -871,10 +1005,12 @@ Overlay.CommandsController = Overlay.MenuController.extend({
   };
 
   Layer.prototype.setVersion = function(d) {
-    return this.version = d.version;
+    this.version = d.version;
+    return this.clear();
   };
 
   Layer.prototype.playMacro = function(d) {
+    TileWebGL.Models.MacroReplay.stop = false;
     return this.replayMacro = new TileWebGL.Models.MacroReplay(d, this).play();
   };
 
@@ -909,6 +1045,15 @@ Overlay.CommandsController = Overlay.MenuController.extend({
   Macro._numMacros = 0;
 
   Macro._macros = {};
+
+  Macro.processAction = function(d) {
+    if (d.action === 'addTile') {
+      this.startRecordingMacro();
+    }
+    if (this._recordingMacro) {
+      return this._recordingMacro.recordAction(d);
+    }
+  };
 
   Macro.find = function(id) {
     return this._macros[id];
@@ -988,14 +1133,20 @@ TileWebGL.Models.MacroReplay = (function() {
   MacroReplay.prototype.transposeAction = function(pretransposed) {
     var d;
     d = $.extend({}, pretransposed);
-    if (d.action === 'selectTileSegment' && (this.tileSegmentOffset != null)) {
-      d.segment += this.tileSegmentOffset;
-    }
-    if (d.action === 'selectControlPoint' && (this.controlPointOffset != null)) {
-      d.id += this.controlPointOffset;
-    }
-    if (d.action === 'addTile') {
-      d.action = 'macroAddTileSegment';
+    switch (d.action) {
+      case 'selectTileSegment':
+      case 'splitTileSegment':
+        if (this.tileSegmentOffset) {
+          d.segment += this.tileSegmentOffset;
+        }
+        break;
+      case 'selectControlPoint':
+        if (this.controlPointOffset != null) {
+          d.id += this.controlPointOffset;
+        }
+        break;
+      case 'addTile':
+        d.action = 'macroAddTileSegment';
     }
     return d;
   };
@@ -1635,6 +1786,7 @@ Geometry.checkLineIntersection = function(line1StartX, line1StartY, line1EndX, l
 ;TileWebGL.Views.AppView = (function() {
   function AppView() {
     TileWebGL.appView = this;
+    this.initializeStateMachine();
     this.domContainer = document.getElementById("ThreeJS");
     this.objects = [];
     this.createScene();
@@ -1643,12 +1795,25 @@ Geometry.checkLineIntersection = function(line1StartX, line1StartY, line1EndX, l
     this.animate();
   }
 
+  AppView.prototype.initializeStateMachine = function() {
+    return TileWebGL.appController.onStateChange((function(_this) {
+      return function(state) {
+        switch (state) {
+          case 'create':
+            return _this.ignoreMouseEvents = false;
+          default:
+            return _this.ignoreMouseEvents = true;
+        }
+      };
+    })(this));
+  };
+
   AppView.prototype.createScene = function() {
     this.scene = new THREE.Scene();
     this.width = window.innerWidth;
     this.height = window.innerHeight;
     this.aspect = this.width / this.height;
-    this.near = 0.1;
+    this.near = 1000;
     this.far = 20000;
     this.camera = new THREE.PerspectiveCamera(10, this.aspect, this.near, this.far);
     this.updateCameraPosition();
@@ -1832,6 +1997,9 @@ Geometry.checkLineIntersection = function(line1StartX, line1StartY, line1EndX, l
 
   AppView.prototype.handleMoveEvent = function(coord) {
     var intersect, layerController;
+    if (this.ignoreMouseEvents) {
+      return;
+    }
     intersect = this.raycastIntersects(coord);
     if (intersect != null) {
       if (!intersect.object.view.mouseMove([intersect.point.x, intersect.point.y])) {
@@ -1857,6 +2025,9 @@ Geometry.checkLineIntersection = function(line1StartX, line1StartY, line1EndX, l
 
   AppView.prototype.handleDownEvent = function(coord) {
     var intersect;
+    if (this.ignoreMouseEvents) {
+      return;
+    }
     intersect = this.raycastIntersects(coord);
     if (intersect != null) {
       return intersect.object.view.mouseDown([intersect.point.x, intersect.point.y]);
@@ -1887,16 +2058,7 @@ Geometry.checkLineIntersection = function(line1StartX, line1StartY, line1EndX, l
     TileWebGL.layerView = this;
     this.tileViews = {};
     this.controller = TileWebGL.appController.activeLayerController();
-    TileWebGL.appController.onStateChange((function(_this) {
-      return function(state) {
-        switch (state) {
-          case 'create':
-            return _this.showWall();
-          default:
-            return _this.showWall(false);
-        }
-      };
-    })(this));
+    this.showWall();
   }
 
   Layer.prototype.redrawTile = function(tile, forceSelected) {
@@ -1926,14 +2088,13 @@ Geometry.checkLineIntersection = function(line1StartX, line1StartY, line1EndX, l
   };
 
   Layer.prototype.clear = function() {
-    var id, tileView, _ref, _results;
+    var id, tileView, _ref;
     _ref = this.tileViews;
-    _results = [];
     for (id in _ref) {
       tileView = _ref[id];
-      _results.push(tileView.destroy());
+      tileView.destroy();
     }
-    return _results;
+    return this.tileViews = {};
   };
 
   Layer.prototype.showWall = function(show) {
@@ -2256,14 +2417,15 @@ TileWebGL.Views.ControlPoint = (function() {
   ControlPoint.prototype.createInnerCircle = function() {
     var circleGeometry, material, p;
     material = new THREE.MeshLambertMaterial({
-      emissive: 0x202020
+      color: 0x999999,
+      emissive: 0x999999
     });
     circleGeometry = new THREE.RingGeometry(8, 14, 32);
     p = this.tile.location;
     this.innerCircle = new THREE.Mesh(circleGeometry, material);
     this.innerCircle.position.x = this.coord[0] + p[0];
     this.innerCircle.position.y = this.coord[1] + p[1];
-    this.innerCircle.position.z = TileWebGL.prefs.depth + this.tileView.tilePosZ() + 10;
+    this.innerCircle.position.z = TileWebGL.prefs.depth + this.tileView.tilePosZ() + 20;
     this.innerCircle['view'] = this;
     return this.appView.addToScene(this.innerCircle);
   };

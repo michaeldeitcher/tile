@@ -1,8 +1,7 @@
 Overlay.Router.map ->
   @resource 'planes', { path: "/"}
   @resource 'plane', { path: "/plane/:plane_id" }
-  @resource 'commands'
-  @resource 'camera'
+  @resource 'receive'
 
 Overlay.PlanesRoute = Ember.Route.extend(
   model: (params) ->
@@ -50,7 +49,8 @@ Overlay.MenuController = Ember.ObjectController.extend(
       id = TileWebGL.Models.Plane.getLastPlaneId()
       @transitionToRoute('plane', id) if id > -1
 )
-
+pusher = null
+channel = null
 Overlay.PlaneController = Overlay.MenuController.extend(
   start: ( ->
     unless @started
@@ -60,6 +60,7 @@ Overlay.PlaneController = Overlay.MenuController.extend(
       model = @get 'model'
       history = model.history
       TileWebGL.appController.replayHistoryString history if history.length > 0
+      TileWebGL.api.startSending()
     ''
   ).property()
 
@@ -73,10 +74,7 @@ Overlay.PlaneController = Overlay.MenuController.extend(
     clear: ->
       TileWebGL.appController.clearStage()
     macroPlay: ->
-      TileWebGL.Models.MacroReplay.stop = false
-      macro = TileWebGL.Models.Macro.recordingMacro()
-      d = {macro_id: macro.id}
-      TileWebGL.activeLayerController().layer.playMacro d
+      TileWebGL.activeLayerController().playMacro()
 
     menuSelectShow: ->
       if @selectMenuShown
@@ -108,14 +106,14 @@ Overlay.PlaneController = Overlay.MenuController.extend(
     white: ->
       @private.updateColor '#999999'
 
-    menuConfigShow: ->
-      $('#menuConfig').fadeIn('fast')
-      $('.menu:not("#menuConfig")').fadeOut('slow')
+    menuPeerConfigShow: ->
+      $('#menuPeerConfig').fadeIn('fast')
+      $('.menu:not("#menuPeerConfig")').fadeOut('slow')
       @selectMenuShown = false
-    tileDepthIncrease: ->
-      window.TileWebGL.depth += 5
-    tileDepthDecrease: ->
-      window.TileWebGL.depth -= 5 unless window.TileWebGL.depth < 5
+    becomeSender: ->
+      TileWebGL.api.startSending()
+    becomeReceiver: ->
+      TileWebGL.api.startReceiving()
 
   private:
     updateColor: (color) ->
@@ -126,18 +124,12 @@ Overlay.PlaneController = Overlay.MenuController.extend(
 
 )
 
-Overlay.CommandsController = Overlay.MenuController.extend(
-  actions:
-
-    startRecording: ->
-      TileWebGL.Models.Macro.startRecordingMacro()
-
-    play: ->
-      TileWebGL.Models.MacroReplay.stop = false
-      macro = TileWebGL.Models.Macro.recordingMacro()
-      d = {macro_id: macro.id}
-      TileWebGL.activeLayerController().layer.playMacro d
-
-    stop: ->
-      TileWebGL.Models.MacroReplay.stop = true
+Overlay.ReceiveController = Ember.ObjectController.extend(
+  start: ( ->
+    unless @started
+      TileWebGL.appController.start()
+      TileWebGL.api.startReceiving()
+      @started = true
+    ''
+  ).property()
 )

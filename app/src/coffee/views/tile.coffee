@@ -137,13 +137,13 @@ class TileWebGL.Views.ControlPoint
     @
 
   createInnerCircle: ->
-    material = new THREE.MeshLambertMaterial(emissive: 0x202020)
+    material = new THREE.MeshLambertMaterial(color: 0x999999, emissive: 0x999999)
     circleGeometry = new THREE.RingGeometry( 8, 14, 32 );
     p = @tile.location
     @innerCircle = new THREE.Mesh circleGeometry, material
     @innerCircle.position.x = @coord[0]+p[0]
     @innerCircle.position.y = @coord[1]+p[1]
-    @innerCircle.position.z = TileWebGL.prefs.depth + @tileView.tilePosZ() + 10
+    @innerCircle.position.z = TileWebGL.prefs.depth + @tileView.tilePosZ() + 20
     @innerCircle['view'] = @
     @appView.addToScene(@innerCircle)
 

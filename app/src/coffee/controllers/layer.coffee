@@ -65,3 +65,8 @@ class TileWebGL.Controllers.LayerController
     d['action'] = action
     @layer.addAction(d)
     @layer.processActions()
+
+  playMacro: ->
+    macro = TileWebGL.Models.Macro.recordingMacro()
+    d = {macro_id: macro.id}
+    @processAction 'playMacro', d

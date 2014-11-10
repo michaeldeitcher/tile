@@ -1,6 +1,8 @@
 class TileWebGL.Views.AppView
   constructor: ->
     TileWebGL.appView = @
+    @initializeStateMachine()
+
     @domContainer = document.getElementById("ThreeJS")
     @objects = []
 
@@ -9,13 +11,22 @@ class TileWebGL.Views.AppView
     @registerEvents()
     @animate()
 
+  initializeStateMachine: ->
+    TileWebGL.appController.onStateChange( (state) =>
+      switch state
+        when 'create'
+          @ignoreMouseEvents = false
+        else
+          @ignoreMouseEvents = true
+    )
+
   createScene: ->
     @scene = new THREE.Scene()
 
     @width = window.innerWidth
     @height = window.innerHeight
     @aspect = @width/@height
-    @near = 0.1
+    @near = 1000
     @far = 20000
 
     @camera = new THREE.PerspectiveCamera(10, @aspect, @near, @far)
@@ -113,6 +124,7 @@ class TileWebGL.Views.AppView
     @handleUpEvent [touch.pageX, touch.pageY]
 
   handleMoveEvent: (coord) ->
+    return if @ignoreMouseEvents
     intersect = @raycastIntersects(coord)
     if intersect?
       unless intersect.object.view.mouseMove [intersect.point.x, intersect.point.y]
@@ -128,6 +140,7 @@ class TileWebGL.Views.AppView
         layerController.mouseUp [intersect.point.x, intersect.point.y]
 
   handleDownEvent: (coord) ->
+    return if @ignoreMouseEvents
     intersect = @raycastIntersects(coord)
     if intersect?
       intersect.object.view.mouseDown [intersect.point.x, intersect.point.y]

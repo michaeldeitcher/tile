@@ -9,13 +9,20 @@ class TileWebGL.Models.Layer
     @segment = null
     @controlPoint = null
     @material = TileWebGL.config.tile.material
+    @state = 'create'
+    @initializeStateMachine()
+
+  initializeStateMachine: ->
+    TileWebGL.appController.onStateChange( (state) =>
+      @state = state
+    )
 
   clear: ->
     @layerView.clear()
-    @tiles = []
     @tile = null
     @segment = null
     @controlPoint = null
+    @tiles = []
 
   addAction: (action)->
     if @controlPoint && action.action == 'moveControlPoint'
@@ -27,11 +34,12 @@ class TileWebGL.Models.Layer
   processActions: ->
     while @actions.length > 0
       action = @actions.pop()
-      TileWebGL.Models.Macro.processAction action
+      TileWebGL.api.sendAction action
       @processAction action
 
   processAction: (d,elapsedTime=null) ->
-    console.log d unless d.action == 'moveControlPoint'
+#    console.log d unless d.action == 'moveControlPoint'
+    TileWebGL.Models.Macro.processAction d
     if @version == '0.01'
       p = d.coordinates
       d.coordinates = [ p[0] - 250, 250 - p[1] ] if p
@@ -52,6 +60,7 @@ class TileWebGL.Models.Layer
       when 'macroAddTileSegment' then @macroAddTileSegment(d)
       else
         throw 'unsupported action'
+    return unless @state == 'create'
     unless elapsedTime?
       now = new Date().getTime()
       elapsedTime = if @lastTime? then now - @lastTime else 0
@@ -141,8 +150,10 @@ class TileWebGL.Models.Layer
 
   setVersion: (d) ->
     @version = d.version
+    @clear()
 
   playMacro: (d) ->
+    TileWebGL.Models.MacroReplay.stop = false
     @replayMacro = new TileWebGL.Models.MacroReplay(d,@).play()
 
   stopMacro: ->
