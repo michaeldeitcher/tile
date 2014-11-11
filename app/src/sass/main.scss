@@ -30,6 +30,7 @@ div#message {
   right: 5px;
   margin: 0;
   bottom: 60px;
+  pointer-events: none;
 }
 
 div#message.error {

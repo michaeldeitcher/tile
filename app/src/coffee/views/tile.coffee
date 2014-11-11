@@ -22,7 +22,7 @@ class TileWebGL.Views.Tile
     controlPoint.destroy() for controlPoint in @controlPoints
     @controlPoints = []
 
-    return unless @tileSelected
+    return unless @tileSelected && TileWebGL.appController.state == 'create'
 
     i = 0
     controlPointData = @tile.controlPointData()

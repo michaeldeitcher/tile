@@ -16,6 +16,8 @@ class TileWebGL.Views.AppView
       switch state
         when 'create'
           @ignoreMouseEvents = false
+        when 'receive'
+          @controls = new THREE.OrbitControls(@camera, @renderer.domElement) unless @controls?
         else
           @ignoreMouseEvents = true
     )

@@ -17,6 +17,19 @@ body * {
     user-select: none;
 }
 
+div#message {
+    position: absolute;
+    color: white;
+    right: 5px;
+    margin: 0;
+    bottom: 60px;
+    pointer-events: none;
+}
+
+div#message.error {
+    color: red;
+}
+
 ul.menu {
     display: none;
     position: absolute;

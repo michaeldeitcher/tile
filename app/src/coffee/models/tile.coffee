@@ -38,6 +38,8 @@ class TileWebGL.Models.ControlPoint
 
   remove: ->
     if @isStart()
+      if @tile.startEndConnected
+        return @tile.startEndConnected = false
       @segment.mergeLast()
     else
       @segment.mergeNext()
@@ -193,6 +195,13 @@ class TileWebGL.Models.Tile
     vector = getVector {start: point, end: fixedEnd}
     return if vector.direction == 0
     @movePoints(segment, vector, fixedEnd)
+
+    # check to connect start/end
+    return unless segment.id == 0 && @numOfSegments() > 2
+    last = @getControlPoint(@numOfSegments()).coord()
+    if getDistance(last, point) < 2
+      @startEndConnected = true
+      @resolveStartEnd()
 
   movePoints: (segment, vector, endPoint) ->
     lastSegment = new TileWebGL.Models.Segment(@, segment.id-1)

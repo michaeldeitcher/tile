@@ -56,6 +56,7 @@ class TileWebGL.Controllers.WebSock
     @socket.onerror = =>
       new Message().setMessageText('Connection failure', 'error')
     @socket.onopen = =>
+      TileWebGL.appController.changeState 'receive'
       new Message().setMessageText('Connected and receiving..')
       @socket.send('receiving')
       @socket.onmessage = (event) =>
