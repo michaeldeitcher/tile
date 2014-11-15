@@ -16,6 +16,14 @@ class TileWebGL.Controllers.WebSock
     now = new Date().getTime()
     elapsedTime = if @lastTime? then now - @lastTime else 0
     @_actionsToSend.push [d, elapsedTime]
+    @sendActionsNow() if @_socketReady?
+
+  sendActionsNow: ->
+    return unless @_actionsToSend.length > 0
+    @socket.send(JSON.stringify(@_actionsToSend))
+    @numActionsSent += @_actionsToSend.length
+    new Message().setMessageText('S: ' + @numActionsSent)
+    @_actionsToSend = []
 
   sendActions: ->
     processActionsToSend = =>
@@ -35,17 +43,18 @@ class TileWebGL.Controllers.WebSock
     @socket = new WebSocket("ws://protected-citadel-9552.herokuapp.com")
     @socket.onerror = =>
       new Message().setMessageText('Connection failure', 'error')
+      @_socketReady = false
     @socket.onopen = =>
       new Message().setMessageText('Connected and sending..')
       @socket.send('sending')
-      @sendActions()
+      @_socketReady = true
 
   startReceiving: () ->
     @numActionsReceived = 0
     @actions = []
     processAction = =>
       TileWebGL.activeLayerController().layer.processAction @action[0]
-      @action = @actions.pop()
+      @action = @actions.shift()
       if @action?
         timeOut = if @action[1] > 250 then 250 else @action[1]
         setTimeout( processAction, timeOut)
@@ -63,7 +72,7 @@ class TileWebGL.Controllers.WebSock
         @actions = @actions.concat JSON.parse(event.data)
         @numActionsReceived += @actions.length
         new Message().setMessageText('R: ' + @numActionsReceived)
-        @action = @actions.pop()
+        @action = @actions.shift()
         processAction()
 
 TileWebGL.api = new TileWebGL.Controllers.WebSock()

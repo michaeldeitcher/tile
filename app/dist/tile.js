@@ -61,7 +61,20 @@ TileWebGL.Controllers.WebSock = (function() {
     var elapsedTime, now;
     now = new Date().getTime();
     elapsedTime = this.lastTime != null ? now - this.lastTime : 0;
-    return this._actionsToSend.push([d, elapsedTime]);
+    this._actionsToSend.push([d, elapsedTime]);
+    if (this._socketReady != null) {
+      return this.sendActionsNow();
+    }
+  };
+
+  WebSock.prototype.sendActionsNow = function() {
+    if (!(this._actionsToSend.length > 0)) {
+      return;
+    }
+    this.socket.send(JSON.stringify(this._actionsToSend));
+    this.numActionsSent += this._actionsToSend.length;
+    new Message().setMessageText('S: ' + this.numActionsSent);
+    return this._actionsToSend = [];
   };
 
   WebSock.prototype.sendActions = function() {
@@ -88,14 +101,15 @@ TileWebGL.Controllers.WebSock = (function() {
     this.socket = new WebSocket("ws://protected-citadel-9552.herokuapp.com");
     this.socket.onerror = (function(_this) {
       return function() {
-        return new Message().setMessageText('Connection failure', 'error');
+        new Message().setMessageText('Connection failure', 'error');
+        return _this._socketReady = false;
       };
     })(this);
     return this.socket.onopen = (function(_this) {
       return function() {
         new Message().setMessageText('Connected and sending..');
         _this.socket.send('sending');
-        return _this.sendActions();
+        return _this._socketReady = true;
       };
     })(this);
   };
@@ -108,7 +122,7 @@ TileWebGL.Controllers.WebSock = (function() {
       return function() {
         var timeOut;
         TileWebGL.activeLayerController().layer.processAction(_this.action[0]);
-        _this.action = _this.actions.pop();
+        _this.action = _this.actions.shift();
         if (_this.action != null) {
           timeOut = _this.action[1] > 250 ? 250 : _this.action[1];
           return setTimeout(processAction, timeOut);
@@ -125,13 +139,14 @@ TileWebGL.Controllers.WebSock = (function() {
     })(this);
     return this.socket.onopen = (function(_this) {
       return function() {
+        TileWebGL.appController.changeState('receive');
         new Message().setMessageText('Connected and receiving..');
         _this.socket.send('receiving');
         return _this.socket.onmessage = function(event) {
           _this.actions = _this.actions.concat(JSON.parse(event.data));
           _this.numActionsReceived += _this.actions.length;
           new Message().setMessageText('R: ' + _this.numActionsReceived);
-          _this.action = _this.actions.pop();
+          _this.action = _this.actions.shift();
           return processAction();
         };
       };
@@ -1386,6 +1401,9 @@ TileWebGL.Models.ControlPoint = (function() {
 
   ControlPoint.prototype.remove = function() {
     if (this.isStart()) {
+      if (this.tile.startEndConnected) {
+        return this.tile.startEndConnected = false;
+      }
       return this.segment.mergeLast();
     } else {
       return this.segment.mergeNext();
@@ -1604,7 +1622,7 @@ TileWebGL.Models.Tile = (function() {
   };
 
   Tile.prototype.moveStart = function(segment, point) {
-    var fixedEnd, vector;
+    var fixedEnd, last, vector;
     fixedEnd = midPoint(segment.data[1], segment.data[2]);
     vector = getVector({
       start: point,
@@ -1613,7 +1631,15 @@ TileWebGL.Models.Tile = (function() {
     if (vector.direction === 0) {
       return;
     }
-    return this.movePoints(segment, vector, fixedEnd);
+    this.movePoints(segment, vector, fixedEnd);
+    if (!(segment.id === 0 && this.numOfSegments() > 2)) {
+      return;
+    }
+    last = this.getControlPoint(this.numOfSegments()).coord();
+    if (getDistance(last, point) < 2) {
+      this.startEndConnected = true;
+      return this.resolveStartEnd();
+    }
   };
 
   Tile.prototype.movePoints = function(segment, vector, endPoint) {
@@ -1801,6 +1827,11 @@ Geometry.checkLineIntersection = function(line1StartX, line1StartY, line1EndX, l
         switch (state) {
           case 'create':
             return _this.ignoreMouseEvents = false;
+          case 'receive':
+            if (_this.controls == null) {
+              return _this.controls = new THREE.OrbitControls(_this.camera, _this.renderer.domElement);
+            }
+            break;
           default:
             return _this.ignoreMouseEvents = true;
         }
@@ -2254,7 +2285,7 @@ ThreeView = (function() {
       controlPoint.destroy();
     }
     this.controlPoints = [];
-    if (!this.tileSelected) {
+    if (!(this.tileSelected && TileWebGL.appController.state === 'create')) {
       return;
     }
     i = 0;
