@@ -1,3 +1,8 @@
+pad = (n, width, z) ->
+  z = z or "0"
+  n = n + ""
+  (if n.length >= width then n else new Array(width - n.length + 1).join(z) + n)
+
 class TileWebGL.Models.ControlPoint
   constructor: (@tile, @id) ->
     @segment = @tile.getSegment(if @id is 0 then 0 else @id-1 )
@@ -19,6 +24,9 @@ class TileWebGL.Models.ControlPoint
   isEnd: ->
     !@isStart()
 
+  moveDelta: (delta) ->
+    @move subtractPoint(@coord(), delta)
+
   move: (coordinates) ->
     if @isStart()
       @tile.moveStart(@segment, coordinates)
@@ -30,6 +38,8 @@ class TileWebGL.Models.ControlPoint
 
   remove: ->
     if @isStart()
+      if @tile.startEndConnected
+        return @tile.startEndConnected = false
       @segment.mergeLast()
     else
       @segment.mergeNext()
@@ -95,27 +105,59 @@ class TileWebGL.Models.Tile
       [[0,0], [length, 0], [length, width], [0, width]]
     ]
 
+  setMaterial: (material) ->
+    @material = {
+      material: material.material
+      color: parseInt material.color.replace("#", "0x")
+      colorAmbient: parseInt material.colorAmbient.replace("#", "0x")
+      colorEmissive: parseInt material.colorEmissive.replace("#", "0x")
+      colorSpecular: parseInt material.colorSpecular.replace("#", "0x")
+      shininess: material.shininess
+      opacity: material.opacity
+      transparent: true
+    }
+
+  getMaterial: ->
+    {
+      material: @material.material
+      color: "#" + pad @material.color.toString(16), 6
+      colorAmbient: "#" + pad @material.colorAmbient.toString(16), 6
+      colorEmissive: "#" + pad @material.colorEmissive.toString(16), 6
+      colorSpecular: "#" + pad @material.colorSpecular.toString(16), 6
+      shininess: @material.shininess
+      opacity: @material.opacity
+      transparent: true
+    }
+
   numOfSegments: ->
     @data.length
 
   getSegment: (id) ->
     new TileWebGL.Models.Segment(@, id)
 
+  addSegment: () ->
+    last = new TileWebGL.Models.Segment(@, @data.length-1)
+    @data[@data.length] = [last.data[1],
+                           addPoint(last.data[1], [TileWebGL.prefs.segmentStartLength,0]),
+                           addPoint(last.data[2], [TileWebGL.prefs.segmentStartLength,0]),
+                           last.data[2]]
+
   getControlPoint: (id) ->
     new TileWebGL.Models.ControlPoint(@, id)
 
   controlPointData: ->
+    n = @numOfSegments()
     data = []
-    for i in [0..@numOfSegments()-1]
+    return data if n < 1
+    for i in [0..n-1]
       segment = @getSegment(i)
       data = data.concat segment.controlPointData()
     data
 
-  addTileSegment: (growTo) ->
-    lastSegment = new TileWebGL.Models.Segment(@, @data.length-1)
-    segment = new TileWebGL.Models.Segment(@, @data.length)
-    @data[@data.length] = []
-    @moveEnd(segment, growTo)
+  addTileSegment: (growTo=null) ->
+    @addSegment()
+    segment = new TileWebGL.Models.Segment(@, @data.length-1)
+    @moveEnd(segment, growTo) if growTo
     segment
 
   insertSegment: (i, newSegmentPoints) ->
@@ -153,6 +195,13 @@ class TileWebGL.Models.Tile
     vector = getVector {start: point, end: fixedEnd}
     return if vector.direction == 0
     @movePoints(segment, vector, fixedEnd)
+
+    # check to connect start/end
+    return unless segment.id == 0 && @numOfSegments() > 2
+    last = @getControlPoint(@numOfSegments()).coord()
+    if getDistance(last, point) < 2
+      @startEndConnected = true
+      @resolveStartEnd()
 
   movePoints: (segment, vector, endPoint) ->
     lastSegment = new TileWebGL.Models.Segment(@, segment.id-1)

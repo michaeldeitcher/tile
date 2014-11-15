@@ -8,27 +8,41 @@ class TileWebGL.Models.Layer
     @tile = null
     @segment = null
     @controlPoint = null
+    @material = TileWebGL.config.tile.material
+    @state = 'create'
+    @initializeStateMachine()
+
+  initializeStateMachine: ->
+    TileWebGL.appController.onStateChange( (state) =>
+      @state = state
+    )
 
   clear: ->
     @layerView.clear()
-    @tiles = []
     @tile = null
     @segment = null
     @controlPoint = null
+    @tiles = []
 
   addAction: (action)->
+    if @controlPoint && action.action == 'moveControlPoint'
+      ptCoord = addPoint @controlPoint.coord(), @tile.location
+      action.location_delta = subtractPoint ptCoord, action.coordinates
+
     @actions.push(action)
 
   processActions: ->
     while @actions.length > 0
-      @processAction @actions.pop()
+      action = @actions.pop()
+      TileWebGL.api.sendAction action
+      @processAction action
 
   processAction: (d,elapsedTime=null) ->
-    if d.coordinates
+#    console.log d unless d.action == 'moveControlPoint'
+    TileWebGL.Models.Macro.processAction d
+    if @version == '0.01'
       p = d.coordinates
-      #      console.log p
-      d.coordinates = [ p[0] - @stage.size[0]/2, @stage.size[1]/2 - p[1] ]
-    #    console.log d
+      d.coordinates = [ p[0] - 250, 250 - p[1] ] if p
 
     switch d.action
       when 'addTile' then @addTile(d)
@@ -39,9 +53,14 @@ class TileWebGL.Models.Layer
       when 'clearSelection' then @clearSelection(d)
       when 'moveControlPoint' then @moveControlPoint(d)
       when 'removeControlPoint' then @removeControlPoint(d)
+      when 'setMaterial' then @setMaterial(d)
       when 'setVersionInfo' then @setVersion(d)
+      when 'playMacro' then @playMacro(d)
+      when 'startMacro' then @startMacro(d)
+      when 'macroAddTileSegment' then @macroAddTileSegment(d)
       else
         throw 'unsupported action'
+    return unless @state == 'create'
     unless elapsedTime?
       now = new Date().getTime()
       elapsedTime = if @lastTime? then now - @lastTime else 0
@@ -77,10 +96,10 @@ class TileWebGL.Models.Layer
 
   addTile: (d) ->
     @tile = new TileWebGL.Models.Tile(@tiles.length, d.coordinates)
+    @tile.setMaterial @material
     @tiles.push @tile
     @segment = @tile.getSegment(0)
-    @layerView.redrawTile(@tile)
-#    @selectTileSegment({tile: @tile.id, segment: @segment.id})
+    @layerView.redrawTile(@tile, true)
 
   addTileSegment: (d) ->
     segment = @tile.addTileSegment(subtractPoint(d.coordinates, @tile.location))
@@ -91,15 +110,16 @@ class TileWebGL.Models.Layer
     @tile = @tiles[d.tile]
     segment = @tile.getSegment(d.segment)
     @segment = segment
-    @layerView.selectSegment(@tile, @segment, @state)
+#    TileWebGL.DATGUI.updateMaterial(@tile.getMaterial())
 
   isSegmentSelected: (tileId, segmentId) ->
     @tile && @tile.id == tileId && @segment && @segment.id == segmentId
 
-  splitTileSegment: ->
-    @tile = @tiles[@tile.id]
-    @segment = @tile.getSegment(@segment.id)
+  splitTileSegment: (d) ->
+    @tile = @tiles[d.tile]
+    @segment = @tile.getSegment(d.segment)
     @segment.split()
+    @controlPoint = null
     @layerView.redrawTile(@tile)
 
   selectControlPoint: (d) ->
@@ -115,20 +135,40 @@ class TileWebGL.Models.Layer
 
   moveControlPoint: (d) ->
 #    try
-    @controlPoint.move(subtractPoint(d.coordinates, @tile.location))
+    if d.location_delta?
+      @controlPoint.moveDelta d.location_delta
+    else
+      @controlPoint.move(subtractPoint(d.coordinates, @tile.location))
     @layerView.redrawTile(@tile)
-    @layerView.selectSegment(@tile, @segment)
     @state = 'move_control_point'
 #    catch error
 #      @controlPoint = null
 
   removeControlPoint: (d) ->
     @controlPoint.remove()
-    @layerView.redrawTile(@tile)
-    @clearSelection()
+    @layerView.redrawTile(@tile, true)
 
   setVersion: (d) ->
     @version = d.version
+    @clear()
+
+  playMacro: (d) ->
+    TileWebGL.Models.MacroReplay.stop = false
+    @replayMacro = new TileWebGL.Models.MacroReplay(d,@).play()
+
+  stopMacro: ->
+    @replayMacro.stop()
+
+  macroAddTileSegment: (d) ->
+    segment = @tile.addTileSegment()
+    @layerView.redrawTile(@tile)
+    @selectTileSegment({tile: @tile.id, segment: segment.id})
+
+  setMaterial: (d) ->
+    @material = Object.create d.material
+    if @tile
+      @tile.setMaterial @material
+      @layerView.redrawTile(@tile)
 
 
 

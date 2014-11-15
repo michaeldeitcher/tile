@@ -4,11 +4,10 @@ class TileWebGL.Controllers.AppController
     @initStateMachine()
     @appView = new TileWebGL.Views.AppView()
     TileWebGL.activeLayerController = @activeLayerController
-    new TileWebGL.Controllers.ToolbarController(@svg)
 
   start: ->
     #stage
-    @stage = new TileWebGL.Models.Stage([500,500])
+    @stage = new TileWebGL.Models.Stage()
     @layerControllers = [new TileWebGL.Controllers.LayerController()]
     @activeLayerController().start()
     @changeState('show')
@@ -16,10 +15,22 @@ class TileWebGL.Controllers.AppController
   activeLayerController: ->
     TileWebGL.appController.layerControllers[0]
 
+  zoomIn: ->
+    @appView.adjustCameraPosition([0,0,-200])
+
+  zoomOut: ->
+    @appView.adjustCameraPosition([0,0,200])
+
   clearStage: ->
     @stage.clear()
     @start()
     @enableEditing()
+
+  replayHistoryString: (historyString) ->
+    @replayHistory JSON.parse( historyString )
+
+  historyString: ->
+    JSON.stringify @activeLayerController().layer.history
 
   enableEditing: ->
     @changeState('create')
@@ -27,6 +38,11 @@ class TileWebGL.Controllers.AppController
   replayHistory: (history) ->
     @lastState = @changeState('replay')
     @activeLayerController().layer.animateHistory(history.reverse())
+
+  enterReceiveState: ->
+    @stage.clear()
+    @start()
+    @changeState('receive')
 
   replayCanvas: ->
     @stage.clear()
@@ -41,9 +57,20 @@ class TileWebGL.Controllers.AppController
   onDoneReplay: ->
     @changeState(@lastState)
 
+  setMaterial: (material) ->
+    layer.setMaterial(material) for layer in @layerControllers
+
+  toggleOrbitControls: ->
+    if @orbitOn
+      TileWebGL.appView.disableOrbitControls()
+      @orbitOn = false
+    else
+      TileWebGL.appView.enableOrbitControls()
+      @orbitOn = true
+
 #### STATE MACHINE
   initStateMachine: ->
-    @states = ['init', 'create', 'replay', 'show']
+    @states = ['init', 'create', 'replay', 'show', 'receive']
     @stateHandlers = []
     @changeState('init')
 

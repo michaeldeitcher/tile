@@ -1,15 +1,10 @@
 class TileWebGL.Controllers.LayerController
   constructor: (@svg, @stageSize) ->
-    TileWebGL.appController.onStateChange( (state) =>
-      @changeState(state)
-    )
 
   start: ->
-    @initStateMachine()
     @layer = TileWebGL.stage.activeLayer()
     @layerView = new TileWebGL.Views.Layer()
     @layer.layerView = @layerView
-    @layerView.registerEditEventHandlers()
 
     @tileController = new TileWebGL.Controllers.TileController(@layer)
     @tileController.loadTiles()
@@ -17,50 +12,61 @@ class TileWebGL.Controllers.LayerController
     @segmentController = new TileWebGL.Controllers.SegmentController()
     @controlPointController = new TileWebGL.Controllers.ControlPointController()
     @processAction 'setVersionInfo', {version: '0.2'}
+    @selectedTileSegment = null
 
-  mouseMove: ( coord ) ->
-    return unless @state is 'create'
-    return if @controlPointController.handleMouseMove(coord)
+  setMaterial: (material) ->
+    @processAction 'setMaterial', {material: material}
 
-  mouseUp: ( coord ) ->
-    return @ignoreUp = false if @ignoreUp
-    return if TileWebGL.toolbarController.handleMouseUp(coord)
-#    return if @controlPointController.handleMouseUp(coord)
-#    return if @segmentController.handleMouseUp(coord)
-#    return if @tileController.handleMouseUp(coord)
-    TileWebGL.toolbarController.showToolbar coord
+  selectTileSegment: ( selection ) ->
+    @processAction 'clearSelection' if @layer.segment
+    @processAction 'selectTileSegment', {tile: selection[0], segment: selection[1]}
 
-  mouseDown: (coord) ->
-    switch @state
-      when 'replay'
-        @layer.pauseAnimation()
-        TileWebGL.toolbarController.showToolbar(coord)
-      else
-        return
+  splitTileSegment: ( selection ) ->
+    @processAction 'splitTileSegment', {tile: selection[0], segment: selection[1]}
+    @selectedControlPoint = null
 
-  selectTileSegment: (tileId, segmentId)  ->
-    TileWebGL.toolbarController.closeToolbar()
-    @processAction('selectTileSegment', {tile: tileId, segment: segmentId})
-    @ignoreUp = true
+  isTileSelected: (selection) ->
+    return false unless @layer.tile
+    @layer.tile.id == selection[0]
+
+  toggleWall: ->
+    @layerView.showWall !@layerView.wall?
+
+  mouseUp: (coord) ->
+    return @controlPointMoving = false if @controlPointMoving
+
+    if @layer.segment
+      @processAction 'clearSelection'
+    else
+      @processAction 'addTile', {coordinates: [coord[0], coord[1] - (.5 * TileWebGL.prefs.width)]}
+
+  mouseMove: (point) ->
+    if @controlPointMoving
+      @processAction 'moveControlPoint', {coordinates: point}
+      @controlPointMoved = true
+
+  controlPointMouseDown: (id) ->
+    if !@layer.controlPoint || @layer.controlPoint.id != id
+      @processAction 'selectControlPoint', {id: id}
+      @controlPointMoving = true
+      @controlPointMoved = false
+
+  controlPointMouseUp: (id) ->
+    if @controlPointMoving
+      @controlPointMoving = false
+    else
+      if @layer.controlPoint && @layer.controlPoint.id == id
+        if @controlPointMoved
+          @controlPointMoved = false
+        else
+          @processAction 'removeControlPoint'
 
   processAction: (action, d = {}) ->
     d['action'] = action
     @layer.addAction(d)
     @layer.processActions()
 
-#### STATE MACHINE
-  initStateMachine: ->
-    @states = ['init', 'create', 'replay', 'show']
-    @stateHandlers = []
-    @changeState('init')
-
-  changeState: (state) ->
-    return if @state is state
-    throw 'not a valid state' if $.inArray(state, @states) is -1
-    lastState = @state
-    @state = state
-    handler(state) for handler in @stateHandlers
-    lastState
-
-  onStateChange: (handler) ->
-    @stateHandlers.push(handler)
+  playMacro: ->
+    macro = TileWebGL.Models.Macro.recordingMacro()
+    d = {macro_id: macro.id}
+    @processAction 'playMacro', d
