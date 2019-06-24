@@ -4,13 +4,14 @@
   "repository": "",
   "devDependencies": {
     "coffee-script": "~1.7.1",
-    "grunt": "~0.4.2",
-    "grunt-contrib-coffee": "~0.10.1",
-    "grunt-contrib-concat": "^0.5.0",
-    "grunt-contrib-copy": "^0.7.0",
-    "grunt-contrib-sass": "~0.7.2",
-    "grunt-contrib-uglify": "^0.6.0",
-    "grunt-contrib-watch": "~0.5.3",
-    "grunt-web-server": "^1.2.3"
+    "grunt": "",
+    "grunt-contrib-coffee": "",
+    "grunt-contrib-concat": "",
+    "grunt-contrib-copy": "",
+    "grunt-contrib-sass": "",
+    "grunt-contrib-uglify": "",
+    "grunt-contrib-watch": "",
+    "grunt-web-server": "",
+    "grunt-http-server": ""
   }
 }

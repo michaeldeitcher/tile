@@ -84,4 +84,4 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-uglify'
 
   # tasks
-  grunt.registerTask 'default', ['sass', 'coffee', 'watch']
+  grunt.registerTask 'default', ['sass', 'coffee', 'http-server', 'watch']

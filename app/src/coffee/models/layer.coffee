@@ -60,10 +60,11 @@ class TileWebGL.Models.Layer
       when 'macroAddTileSegment' then @macroAddTileSegment(d)
       else
         throw 'unsupported action'
-    return unless @state == 'create'
+    # return unless @state == 'create'
     unless elapsedTime?
       now = new Date().getTime()
       elapsedTime = if @lastTime? then now - @lastTime else 0
+    console.log(d);
     @history.push [d, elapsedTime]
     @lastTime = now
 
@@ -169,6 +170,3 @@ class TileWebGL.Models.Layer
     if @tile
       @tile.setMaterial @material
       @layerView.redrawTile(@tile)
-
-
-
