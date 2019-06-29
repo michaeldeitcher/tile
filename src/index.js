@@ -1,18 +1,16 @@
-import { Geometry } from './geometry' ;
 import './styles/main.scss';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
 import TileCanvas from "./components/tile/TileCanvas";
+import TileMenu from "./components/tile/TileMenu";
 
 const title = 'React with Webpack and Babel';
 
 ReactDOM.render(
   <div>
-    {title}
+    <TileMenu />
     <TileCanvas />
   </div>,
   document.getElementById('app')
 );
-
-console.log( Geometry.getDistance([0,0],[1,1]));

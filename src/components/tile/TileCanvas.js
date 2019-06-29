@@ -3,6 +3,9 @@ import React, { Component } from 'react';
 import threeEntryPoint from "../tile/threejs/threeEntryPoint"
 import "./TileCanvas.scss"
 
+import scrollLock from 'scroll-lock';
+scrollLock.disablePageScroll();
+
 export default class Header extends Component {
 
     componentDidMount() {
