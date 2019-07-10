@@ -43,13 +43,12 @@ export default class LayerController {
         return this.layerView.showWall((this.layerView.wall == null));
     }
 
-    mouseUp(coord) {
+    mouseUp(point) {
         if (this.controlPointMoving) { return this.controlPointMoving = false; }
-        console.log("hey");
         if (this.layer.segment) {
             return this.processAction('clearSelection');
         } else {
-            return this.processAction('addTile', {coordinates: [coord[0], coord[1] - (.5 * TileConfig.tile.prefs.width)]});
+            return this.processAction('addTile', {coordinates: [point.x, point.y - (.5 * TileConfig.tile.prefs.width)]});
         }
     }
 

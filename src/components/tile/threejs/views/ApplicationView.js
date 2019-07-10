@@ -17,35 +17,43 @@ export default class ApplicationView {
         return this.objects.push(threeMeshObject);
     }
 
+    addToWall(threeMeshObject) {
+        AppController.activeLayerController().layerView.wall.wall.add(threeMeshObject);
+        return this.objects.push(threeMeshObject);
+    }
+
     removeFromScene(threeMeshObject) {
         this.scene.remove(threeMeshObject);
         const index = this.objects.indexOf(threeMeshObject);
         if (index > -1) { return this.objects.splice(index, 1); }
     }
 
-    registerEvents() {
-        // THREEx.WindowResize(this.renderer, this.camera);
-        // THREEx.FullScreen.bindKey({charCode: "m".charCodeAt(0)});
+    removeFromWall(threeMeshObject) {
+        AppController.activeLayerController().layerView.wall.wall.remove(threeMeshObject);
+        const index = this.objects.indexOf(threeMeshObject);
+        if (index > -1) { return this.objects.splice(index, 1); }
+    }
 
+    registerEvents() {
         this.touches = {};
         const el = this.renderer.domElement;
         if ("ontouchstart" in document.documentElement) {
             el.addEventListener("touchstart", event => {
-                return Array.from(event.changedTouches).map((touch) => this.touchStart(touch));
-        });
+                Array.from(event.changedTouches).map((touch) => this.touchStart(touch));
+            });
             el.addEventListener("touchend", event => {
-                return Array.from(event.changedTouches).map((touch) => this.touchEnd(touch));
-        });
+                Array.from(event.changedTouches).map((touch) => this.touchEnd(touch));
+            });
             el.addEventListener("touchcancel", event => {
-                return Array.from(event.changedTouches).map((touch) => this.touchCancel(touch));
-        });
-            return el.addEventListener("touchmove", event => {
-                    return Array.from(event.changedTouches).map((touch) => this.touchMove(touch));
-        });
+                Array.from(event.changedTouches).map((touch) => this.touchCancel(touch));
+            });
+            el.addEventListener("touchmove", event => {
+                Array.from(event.changedTouches).map((touch) => this.touchMove(touch));
+            });
         } else {
             el.addEventListener('mousemove', event => this.handleMoveEvent([event.clientX, event.clientY]));
             el.addEventListener('mouseup', event => this.handleUpEvent([event.clientX, event.clientY]));
-            return el.addEventListener('mousedown', event => this.handleDownEvent([event.clientX, event.clientY]));
+            el.addEventListener('mousedown', event => this.handleDownEvent([event.clientX, event.clientY]));
         }
     }
 
@@ -83,7 +91,7 @@ export default class ApplicationView {
         if (intersect != null) {
             if (!intersect.object.view.mouseUp([intersect.point.x, intersect.point.y])) {
                 const layerController = AppController.activeLayerController();
-                return layerController.mouseUp([intersect.point.x, intersect.point.y]);
+                return layerController.mouseUp(intersect.point);
             }
         }
     }
@@ -105,6 +113,15 @@ export default class ApplicationView {
         rayCaster.setFromCamera( mouse2D, this.camera );
         const objects = rayCaster.intersectObjects( this.objects );
         if (objects) { return objects[0]; }
+    }
+
+    update(elapsedTime, keys) {
+        if(keys.wallLeft) {
+            AppController.activeLayerController().layerView.wall.wall.rotation.y += .01;
+        }
+        if(keys.wallRight)
+            AppController.activeLayerController().layerView.wall.wall.rotation.y -= .01;
+
     }
 
 }

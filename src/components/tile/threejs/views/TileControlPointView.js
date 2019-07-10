@@ -21,7 +21,7 @@ export default class ControlPoint {
         this.innerCircle = new THREE.Mesh(circleGeometry, material);
         this.innerCircle.position.x = this.coord[0]+p[0];
         this.innerCircle.position.y = this.coord[1]+p[1];
-        this.innerCircle.position.z = TileConfig.tile.prefs.depth + this.tileView.tilePosZ() + 20;
+        this.innerCircle.position.z = TileConfig.tile.prefs.depth + this.tileView.tilePosZ() + .01;
         this.innerCircle['view'] = this;
         return this.appView.addToScene(this.innerCircle);
     }
@@ -33,7 +33,7 @@ export default class ControlPoint {
         this.outerCircle = new THREE.Mesh(circleGeometry, material);
         this.outerCircle.position.x = this.coord[0]+p[0];
         this.outerCircle.position.y = this.coord[1]+p[1];
-        this.outerCircle.position.z = TileConfig.tile.prefs.depth + this.tileView.tilePosZ() + 1;
+        this.outerCircle.position.z = TileConfig.tile.prefs.depth + this.tileView.tilePosZ() + .01;
         this.outerCircle['view'] = this;
         return this.appView.addToScene(this.outerCircle);
     }

@@ -44,9 +44,7 @@ ul.menu {
   right: 5px;
   margin: 0;
   bottom: 0;
-  a {
-    text-decoration: none;
-  }
+
   li {
     width: 50px;
     height: 30px;
@@ -77,17 +75,21 @@ ul.menu {
   }
 }
 
-ul.menu#menuSelect {
+ul.menu {
+
+}
+
+ul.sub-menu {
+  float: left;
+  width: 600px;
   li {
-    float: none;
+
   }
 }
 
-ul.menu#menuPlane {
-  display: block;
-}
-
 #overlay.pass-through {
+
+
   pointer-events:none;
 }
 

@@ -102,7 +102,7 @@ class Layer {
                 const timeOut = this.history_item[1] > 250 ? 250 : this.history_item[1];
                 return setTimeout( processHistoryAction, timeOut);
             } else {
-                return this.appController.onDoneReplay();
+                return AppController.onDoneReplay();
             }
         };
 
@@ -124,7 +124,7 @@ class Layer {
             this.processAction(this.replay.pop()[0]);
         }
         this.clearSelection();
-        return this.appController.onDoneReplay();
+        return AppController.onDoneReplay();
     }
 
     addTile(d) {

@@ -9,7 +9,7 @@ export default class Wall {
 
     create() {
         const material = new THREE.MeshBasicMaterial( {color: 0x000000 } );
-        const geometry = new THREE.PlaneGeometry(6000, 6000, 1);
+        const geometry = new THREE.BoxGeometry(100, 100, 100);
 
 //    material = new THREE.MeshPhongMaterial( { color: 0xCCCCCC, shininess: 1, opacity: 0.2 } )
 //    geometry = new THREE.BoxGeometry 600, 600, 1

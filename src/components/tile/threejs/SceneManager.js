@@ -1,8 +1,9 @@
-import * as THREE from 'three';
-import SceneSubject from './SceneSubject';
-import GeneralLights from './GeneralLights';
+import * as THREE from 'three'
+import SceneSubject from './SceneSubject'
+import GeneralLights from './GeneralLights'
 import ApplicationView from './views/ApplicationView'
 import Stage from './models/Stage'
+import KeyState from 'key-state'
 
 export default canvas => {
 
@@ -24,6 +25,14 @@ export default canvas => {
     const camera = buildCamera(screenDimensions);
     const sceneSubjects = createSceneSubjects(scene);
     const applicationView = new ApplicationView(renderer, scene,camera);
+    const keys = KeyState(window, {
+        left: [ "ArrowLeft" ],
+        right: [ "ArrowRight" ],
+        wallLeft: ["KeyA"],
+        wallRight: ["keyD"]
+    });
+
+    // const orbitControls = buildOrbitControls(camera, renderer);
 
     function buildScene() {
         const scene = new THREE.Scene();
@@ -61,6 +70,14 @@ export default canvas => {
         return camera;
     }
 
+    function buildOrbitControls(camera, renderer) {
+        const controls = new OrbitControls(camera, renderer.domElement)
+        controls.enableDamping = true
+        controls.dampingFactor = 0.25
+        controls.enableZoom = false
+        return controls;
+    }
+
     function createSceneSubjects(scene) {
         const sceneSubjects = [
             new GeneralLights(scene),
@@ -76,9 +93,29 @@ export default canvas => {
         for(let i=0; i<sceneSubjects.length; i++)
             sceneSubjects[i].update(elapsedTime);
 
-        // updateCameraPositionRelativeToMouse();
+        updateCameraRotation();
+        applicationView.update(elapsedTime, keys);
 
         renderer.render(scene, camera);
+    }
+
+    function updateCameraRotation(){
+        const rotSpeed = .1;
+
+        var x = camera.position.x,
+            y = camera.position.y,
+            z = camera.position.z;
+
+        if (keys.left){
+            camera.position.x = x * Math.cos(rotSpeed) + z * Math.sin(rotSpeed);
+            camera.position.z = z * Math.cos(rotSpeed) - x * Math.sin(rotSpeed);
+        } else if (keys.right){
+            camera.position.x = x * Math.cos(rotSpeed) - z * Math.sin(rotSpeed);
+            camera.position.z = z * Math.cos(rotSpeed) + x * Math.sin(rotSpeed);
+        }
+
+        camera.lookAt(scene.position);
+
     }
 
     function updateCameraPositionRelativeToMouse() {

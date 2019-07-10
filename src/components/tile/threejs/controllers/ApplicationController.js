@@ -6,8 +6,6 @@ class AppController {
         if (!AppController.instance) {
             AppController.instance = this
             this.initStateMachine();
-            // this.appView = new TileWebGL.Views.AppView();
-            // TileWebGL.activeLayerController = this.activeLayerController;
         }
 
         return instance;
@@ -67,7 +65,7 @@ class AppController {
         this.stage.clear();
         const { history } = this.activeLayerController().layer;
         const lastState = this.state;
-        this.start();
+        this.start(this.appView);
         this.changeState('replay');
         this.lastState = lastState;
         return this.activeLayerController().layer.animateHistory(history.reverse());

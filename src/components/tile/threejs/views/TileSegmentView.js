@@ -27,12 +27,12 @@ export default class TileSegmentView {
         material.side = THREE.DoubleSide;
         this.segment = new THREE.Mesh(this.geometry(), material);
         this.segment['view'] = this;
-        this.appView.addToScene(this.segment);
+        this.appView.addToWall(this.segment);
         return this;
     }
 
     destroy() {
-        return this.appView.removeFromScene(this.segment);
+        return this.appView.removeFromWall(this.segment);
     }
 
     mouseMove(coord) {
