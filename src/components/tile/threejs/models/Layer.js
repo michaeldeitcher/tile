@@ -1,5 +1,4 @@
-import AppController from '../controllers/ApplicationController'
-import TileConfig from '../../TileConfig'
+import TileConfig from '../../../../TileConfig'
 import Tile from './Tile'
 import { Geometry } from '../../../../geometry' ;
 

@@ -1,16 +1,16 @@
 import * as THREE from 'three'
-import AppController from '../controllers/ApplicationController'
-import TileSegmentView from './TileSegmentView'
-import TileControlPointView from './TileControlPointView'
+import ActionManager from '../ActionManager'
+import TileSegment from './TileSegment'
+import TileControlPointCircle from './TileControlPointCircle'
 
-export default class TileView {
-    constructor(layerView, tile) {
-        this.layerView = layerView;
+export default class TileBuilder {
+    constructor(tile, scene) {
         this.tile = tile;
         this.segments = [];
         this.controlPoints = [];
-        this.tileSelected = false;
-        return this.redraw();
+        this.tileSelected = ActionManager.tileId === tile.id;
+        this.redraw();
+        return this;
     }
 
     redraw() {
@@ -23,25 +23,25 @@ export default class TileView {
         this.segments = [];
 
         let i = 0;
-        const result = [];
         while (i < this.tile.data.length) {
-            this.segments.push(new TileSegmentView( this, i ).create());
-            result.push(i++);
+            let segment = new TileSegment( this, i );
+            segment.createThreeObject();
+            this.segments.push(segment);
+            i++;
         }
-        return result;
     }
 
     redrawControlPoints() {
         for (let controlPoint of Array.from(this.controlPoints)) { controlPoint.destroy(); }
         this.controlPoints = [];
 
-        if (!this.tileSelected || (AppController.state !== 'create')) { return; }
+        if (!this.tileSelected || (ActionManager.state.tileCanvas.state !== 'create')) { return; }
 
         let i = 0;
         const controlPointData = this.tile.controlPointData();
         const result = [];
         while (i < controlPointData.length) {
-            this.controlPoints.push(new TileControlPointView( this, controlPointData[i].coord, i ).create());
+            this.controlPoints.push(new TileControlPointCircle( this, controlPointData[i].coord, i ).create());
             result.push(i++);
         }
         return result;
@@ -56,9 +56,5 @@ export default class TileView {
     destroy() {
         for (let segment of Array.from(this.segments)) { segment.destroy(); }
         return Array.from(this.controlPoints).map((controlPoint) => controlPoint.destroy());
-    }
-
-    tilePosZ() {
-        return this.tile.id * 5;
     }
 }

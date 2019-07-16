@@ -1,15 +1,23 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux'
 
 import threeEntryPoint from "../tile/threejs/threeEntryPoint"
 import "./TileCanvas.scss"
+import {addTile} from "./../../actions"
+import ActionManager from "./threejs/ActionManager"
 
 import scrollLock from 'scroll-lock';
 scrollLock.disablePageScroll();
 
-export default class Header extends Component {
+class TileCanvas extends Component {
 
     componentDidMount() {
         threeEntryPoint(this.threeRootElement);
+        this.props.dispatch(addTile({point: [0,0,0]}));
+    }
+
+    handleChange(e) {
+        console.log(e)
     }
 
     render () {
@@ -18,3 +26,17 @@ export default class Header extends Component {
     );
     }
 }
+
+// ActionManager.setStore(store);
+// const updateActionManager = () => {
+//     console.log('hmm');
+//     ActionManager.handleStoreChange();
+// };
+// store.subscribe( updateActionManager );
+
+const mapStateToProps = state => {
+    ActionManager.updateState(state);
+    return {}
+}
+
+export default connect(mapStateToProps)(TileCanvas)

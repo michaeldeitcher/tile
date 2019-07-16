@@ -5,10 +5,7 @@ export default class ControlPoint {
         this.tile = tile;
         this.id = id;
         this.segment = this.tile.getSegment(this.id === 0 ? 0 : this.id-1 );
-        const segmentId = this.id < 2 ?
-            0
-            :
-            this.id-1;
+        const segmentId = this.id < 2 ? 0 : this.id-1;
     }
 
     coord() {

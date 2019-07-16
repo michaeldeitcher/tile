@@ -37,6 +37,7 @@ class TileWebGL.Models.Layer
       TileWebGL.api.sendAction action
       @processAction action
 
+
   processAction: (d,elapsedTime=null) ->
 #    console.log d unless d.action == 'moveControlPoint'
     TileWebGL.Models.Macro.processAction d

@@ -1,6 +1,8 @@
 import LayerController from './LayerController';
 import Stage from '../models/Stage'
 
+let reduxStore = null;
+
 class AppController {
     constructor() {
         if (!AppController.instance) {
@@ -18,6 +20,15 @@ class AppController {
         this.layerControllers = [new LayerController()];
         this.activeLayerController().start();
         return this.changeState('create');
+    }
+
+    setStore(store) {
+        reduxStore = store;
+    }
+
+    handleStoreChange() {
+        console.log("store changed");
+        console.log(reduxStore.getState());
     }
 
     activeLayerController() {

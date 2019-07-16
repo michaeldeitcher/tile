@@ -1,149 +1,148 @@
 import * as THREE from 'three'
 import SceneSubject from './SceneSubject'
 import GeneralLights from './GeneralLights'
-import ApplicationView from './views/ApplicationView'
 import Stage from './models/Stage'
 import KeyState from 'key-state'
 
-export default canvas => {
+import ActionManager from './ActionManager'
+import InteractionPlane from './MeshBehaviors/InteractionPlane'
 
-    const clock = new THREE.Clock();
-    const origin = new THREE.Vector3(0,0,0);
+function buildScene() {
+    const scene = new THREE.Scene();
 
-    const screenDimensions = {
-        width: canvas.width,
-        height: canvas.height
-    }
+    return scene;
+}
 
-    const mousePosition = {
-        x: 0,
-        y: 0
-    }
+function setBackgroundColor() {
+    scene.background = new THREE.Color("#FFF");
+}
 
-    const scene = buildScene();
-    const renderer = buildRender(screenDimensions);
-    const camera = buildCamera(screenDimensions);
-    const sceneSubjects = createSceneSubjects(scene);
-    const applicationView = new ApplicationView(renderer, scene,camera);
-    const keys = KeyState(window, {
-        left: [ "ArrowLeft" ],
-        right: [ "ArrowRight" ],
-        wallLeft: ["KeyA"],
-        wallRight: ["keyD"]
-    });
+function buildRender({ width, height}, canvas) {
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    const DPR = window.devicePixelRatio ? window.devicePixelRatio : 1;
+    renderer.setPixelRatio(DPR);
+    renderer.setSize(width, height);
 
-    // const orbitControls = buildOrbitControls(camera, renderer);
+    renderer.gammaInput = true;
+    renderer.gammaOutput = true;
 
-    function buildScene() {
-        const scene = new THREE.Scene();
+    return renderer;
+}
 
-        return scene;
-    }
+function buildCamera({ width, height }) {
+    const aspectRatio = width / height;
+    const fieldOfView = 10;
+    const nearPlane = 4;
+    const farPlane = 10000;
+    const camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
 
-    function setBackgroundColor() {
-        scene.background = new THREE.Color("#FFF");
-    }
+    const pos = [0, 0, 3000];
+    camera.position.set(pos[0],pos[1],pos[2]);
 
-    function buildRender({ width, height }) {
-        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true }); 
-        const DPR = window.devicePixelRatio ? window.devicePixelRatio : 1;
-        renderer.setPixelRatio(DPR);
-        renderer.setSize(width, height);
+    return camera;
+}
 
-        renderer.gammaInput = true;
-        renderer.gammaOutput = true; 
+function createSceneSubjects(scene) {
+    const sceneSubjects = [
+        new GeneralLights(scene),
+        new SceneSubject(scene)
+    ];
 
-        return renderer;
-    }
+    return sceneSubjects;
+}
 
-    function buildCamera({ width, height }) {
-        const aspectRatio = width / height;
-        const fieldOfView = 10;
-        const nearPlane = 4;
-        const farPlane = 10000;
-        const camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
+export default class SceneManager {
 
-        const pos = [0, 0, 3000];
-        camera.position.set(pos[0],pos[1],pos[2]);
-        camera.lookAt(origin);
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.clock = new THREE.Clock();
+        this.origin = new THREE.Vector3(0,0,0);
 
-        return camera;
-    }
-
-    function buildOrbitControls(camera, renderer) {
-        const controls = new OrbitControls(camera, renderer.domElement)
-        controls.enableDamping = true
-        controls.dampingFactor = 0.25
-        controls.enableZoom = false
-        return controls;
-    }
-
-    function createSceneSubjects(scene) {
-        const sceneSubjects = [
-            new GeneralLights(scene),
-            new SceneSubject(scene)
-        ];
-
-        return sceneSubjects;
-    }
-
-    function update() {
-        const elapsedTime = clock.getElapsedTime();
-
-        for(let i=0; i<sceneSubjects.length; i++)
-            sceneSubjects[i].update(elapsedTime);
-
-        updateCameraRotation();
-        applicationView.update(elapsedTime, keys);
-
-        renderer.render(scene, camera);
-    }
-
-    function updateCameraRotation(){
-        const rotSpeed = .1;
-
-        var x = camera.position.x,
-            y = camera.position.y,
-            z = camera.position.z;
-
-        if (keys.left){
-            camera.position.x = x * Math.cos(rotSpeed) + z * Math.sin(rotSpeed);
-            camera.position.z = z * Math.cos(rotSpeed) - x * Math.sin(rotSpeed);
-        } else if (keys.right){
-            camera.position.x = x * Math.cos(rotSpeed) - z * Math.sin(rotSpeed);
-            camera.position.z = z * Math.cos(rotSpeed) + x * Math.sin(rotSpeed);
+        this.screenDimensions = {
+            width: canvas.width,
+            height: canvas.height
         }
 
-        camera.lookAt(scene.position);
+        this.scene = buildScene();
+        this.renderer = buildRender(this.screenDimensions, this.canvas);
+        this.camera = buildCamera(this.screenDimensions);
+        this.camera.lookAt(this.origin);
+        this.sceneSubjects = createSceneSubjects(this.scene);
+        this.objects = [];
+        let interactionPlane = new InteractionPlane();
+        this.addToScene(interactionPlane.createThreeObject(this));
+
+        this.keys = KeyState(window, {
+            left: [ "ArrowLeft" ],
+            right: [ "ArrowRight" ],
+            wallLeft: ["KeyA"],
+            wallRight: ["keyD"]
+        });
+        ActionManager.sceneManager = this;
+    }
+
+    update() {
+        const elapsedTime = this.clock.getElapsedTime();
+
+        for(let i=0; i< this.sceneSubjects.length; i++)
+            this.sceneSubjects[i].update(elapsedTime);
+
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    onWindowResize() {
+        const { width, height } = this.canvas;
+
+        this.screenDimensions.width = width;
+        this.screenDimensions.height = height;
+
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+
+        this.renderer.setSize(width, height);
+    }
+
+    handleMoveEvent(coord) {
+        if (this.ignoreMouseEvents) { return; }
+        this.raycastIntersects(coord).some( intersect => intersect.object.view.mouseMove(intersect.point) );
+    }
+
+    handleUpEvent(coord) {
+        if (this.ignoreMouseEvents) { return; }
+        this.raycastIntersects(coord).some( intersect => intersect.object.view.mouseUp(intersect.point) );
+    }
+
+    handleDownEvent(coord) {
+        if (this.ignoreMouseEvents) { return; }
+        this.raycastIntersects(coord).some( intersect => intersect.object.view.mouseDown(intersect.point) );
+    }
+
+    raycastIntersects(clientCoord) {
+        const mouseX = (( clientCoord[0] / window.innerWidth ) * 2) - 1;
+        const mouseY = (- ( clientCoord[1] / window.innerHeight ) * 2) + 1;
+
+        const mouse2D = new THREE.Vector2( mouseX, mouseY );
+        const rayCaster = new THREE.Raycaster();
+        rayCaster.setFromCamera( mouse2D, this.camera );
+        return rayCaster.intersectObjects( this.objects );
+    }
+
+    addToScene(threeObject) {
+        this.scene.add(threeObject);
+        return this.objects.push(threeObject);
+    }
+
+    removeFromScene(threeObject) {
+        var index;
+        this.scene.remove(threeObject);
+        index = this.objects.indexOf(threeObject);
+        if (index > -1) {
+            return this.objects.splice(index, 1);
+        }
+    }
+
+    subscribe(state) {
 
     }
 
-    function updateCameraPositionRelativeToMouse() {
-        camera.position.x += (  (mousePosition.x * 0.01) - camera.position.x ) * 0.01;
-        camera.position.y += ( -(mousePosition.y * 0.01) - camera.position.y ) * 0.01;
-        camera.lookAt(origin);
-    }
-
-    function onWindowResize() {
-        const { width, height } = canvas;
-        
-        screenDimensions.width = width;
-        screenDimensions.height = height;
-
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-        
-        renderer.setSize(width, height);
-    }
-
-    function onMouseMove(x, y) {
-        mousePosition.x = x;
-        mousePosition.y = y;
-    }
-
-    return {
-        update,
-        onWindowResize,
-        onMouseMove
-    }
 }

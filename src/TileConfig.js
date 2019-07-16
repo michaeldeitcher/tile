@@ -1,6 +1,7 @@
 export default {
     tile: {
         material: {
+            colorName: "red",
             color: '#FF0000',
             colorAmbient: "#000000",
             colorEmissive: "#000000",

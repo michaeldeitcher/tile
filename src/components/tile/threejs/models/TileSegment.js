@@ -1,4 +1,5 @@
 import { Geometry } from '../../../../geometry' ;
+import TileConfig from '../../../../TileConfig'
 
 class Segment {
     constructor(tile, id) {
@@ -26,10 +27,10 @@ class Segment {
 
     split() {
         const newSegmentPoints = [
-            Geometry.midPoint(this.data[0],this.data[1]),
+            Geometry.midPoint(this.data[0],this.data[1]).concat(0),
             this.data[1],
             this.data[2],
-            Geometry.midPoint(this.data[2],this.data[3]),
+            Geometry.midPoint(this.data[2],this.data[3]).concat(0)
         ];
         this.tile.data[this.id][1] = newSegmentPoints[0];
         this.tile.data[this.id][2] = newSegmentPoints[3];

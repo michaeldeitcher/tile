@@ -1,4 +1,4 @@
-import TileConfig from '../../TileConfig'
+import TileConfig from '../../../../TileConfig'
 import Segment from './TileSegment'
 import ControlPoint from './TileControlPoint'
 import { Geometry } from '../../../../geometry' ;
@@ -10,7 +10,7 @@ export default class Tile {
         const { width } = TileConfig.tile.prefs;
         const length = TileConfig.tile.prefs.segmentStartLength;
         this.data = [
-            [[0,0], [length, 0], [length, width], [0, width]]
+            [[0,0,0], [length, 0,0], [length, width,0], [0, width,0]]
         ];
     }
 
@@ -135,13 +135,13 @@ export default class Tile {
         const lastSegment = new Segment(this, segment.id-1);
 
         const orthog = Geometry.getOrthogonalVector(vector);
-        let leftEnd = Geometry.movePoint(endPoint, Geometry.getVector({direction: orthog.direction, magnitude: TileConfig.tile.prefs.width / -2}));
-        let rightEnd = Geometry.movePoint(endPoint, Geometry.getVector({direction: orthog.direction, magnitude: TileConfig.tile.prefs.width / 2}));
+        let leftEnd = Geometry.movePoint(endPoint, Geometry.getVector({direction: orthog.direction, magnitude: TileConfig.tile.prefs.width / -2})).concat(0);
+        let rightEnd = Geometry.movePoint(endPoint, Geometry.getVector({direction: orthog.direction, magnitude: TileConfig.tile.prefs.width / 2})).concat(0);
 
         // find start points
         const reverseVector = Geometry.getVector({direction: vector.direction, magnitude: -vector.magnitude});
-        let leftStart = Geometry.movePoint(leftEnd, reverseVector);
-        let rightStart = Geometry.movePoint(rightEnd, reverseVector);
+        let leftStart = Geometry.movePoint(leftEnd, reverseVector).concat(0);
+        let rightStart = Geometry.movePoint(rightEnd, reverseVector).concat(0);
 
         // adjust to connect segments
         if (segment.id > 0) {
@@ -172,7 +172,7 @@ export default class Tile {
             this.data[segment.id+1][3] = rightEnd;
         }
 
-        return this.data[segment.id] = [leftStart,leftEnd,rightEnd,rightStart];
+        this.data[segment.id] = [leftStart,leftEnd,rightEnd,rightStart];
     }
 
     resolveStartEnd() {

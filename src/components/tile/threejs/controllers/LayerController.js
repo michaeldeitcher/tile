@@ -3,7 +3,7 @@ import SegmentController from './SegmentController'
 import ControlPointController from './ControlPointController'
 import Stage from '../models/Stage'
 import LayerView from '../views/LayerView'
-import TileConfig from '../../TileConfig'
+import TileConfig from '../../../../TileConfig'
 
 export default class LayerController {
     start() {

@@ -1,38 +1,35 @@
 import * as THREE from 'three'
-import AppController from '../controllers/ApplicationController'
-import TileConfig from '../../TileConfig'
+import TileConfig from '../../../../TileConfig'
+import ActionManager from '../ActionManager'
 
-export default class TileSegmentView {
-    constructor(tileView, segmentIndex) {
-        this.tileView = tileView;
+export default class TileSegment {
+    constructor(tileBuilder, segmentIndex) {
+        this.tileBuilder = tileBuilder;
         this.segmentIndex = segmentIndex;
-        this.appView = AppController.appView;
-        this.layerController = AppController.activeLayerController();
-        this.tile = this.tileView.tile;
+        this.tile = tileBuilder.tile;
         this.data = this.tile.data[this.segmentIndex];
     }
 
-    create(attr){
+    createThreeObject(scene){
         const material = (() => { switch (this.tile.material.material) {
-        case 'Basic':
-            return new THREE.MeshBasicMaterial(this.tile.material);
-        case 'Lambert':
-            return new THREE.MeshLambertMaterial({color: this.tile.material.color});
-        case 'Phong':
-            return new THREE.MeshPhongMaterial(this.tile.material);
-        case 'Wireframe':
-            $.extend(attr, {wireframe: true}, this.tile.material);
-            return new THREE.MeshBasicMaterial(attr);
+            case 'Basic':
+                return new THREE.MeshBasicMaterial(this.tile.material);
+            case 'Lambert':
+                return new THREE.MeshLambertMaterial({color: this.tile.material.color});
+            case 'Phong':
+                return new THREE.MeshPhongMaterial(this.tile.material);
+            case 'Wireframe':
+                $.extend(attr, {wireframe: true}, this.tile.material);
+                return new THREE.MeshBasicMaterial(attr);
         } })();
         material.side = THREE.DoubleSide;
         this.segment = new THREE.Mesh(this.geometry(), material);
         this.segment['view'] = this;
-        this.appView.addToWall(this.segment);
-        return this;
+        ActionManager.sceneManager.addToScene(this.segment);
     }
 
     destroy() {
-        return this.appView.removeFromWall(this.segment);
+        ActionManager.sceneManager.removeFromScene(this.segment);
     }
 
     mouseMove(coord) {
@@ -47,12 +44,12 @@ export default class TileSegmentView {
     mouseUp(coord) {
         if (this.state !== 'mousedown') { return; }
         const selection = [this.tile.id, this.segmentIndex];
-        if (this.layerController.isTileSelected(selection)) {
-            this.layerController.splitTileSegment(selection);
+        if (ActionManager.tile && ActionManager.tile.id == selection[0]) {
+            ActionManager.addAction('splitTileSegment', selection);
         } else {
-            this.layerController.selectTileSegment(selection);
-            this.tileView.selectTile();
+            ActionManager.addAction('selectTileSegment', selection);
         }
+        ActionManager.processActions();
         this.state = undefined;
         return true;
     }
@@ -65,8 +62,8 @@ export default class TileSegmentView {
         const geom = new THREE.Geometry();
         let pointIndex = 0;
         while (pointIndex < this.data.length) {
-            geom.vertices.push(this.vector3(pointIndex, TileConfig.tile.prefs.depth + this.tilePosZ()));
-            geom.vertices.push(this.vector3(pointIndex, this.tilePosZ()));
+            geom.vertices.push(this.dataPoint(pointIndex, TileConfig.tile.prefs.depth));
+            geom.vertices.push(this.dataPoint(pointIndex, 0));
             pointIndex++;
         }
         // front
@@ -94,12 +91,15 @@ export default class TileSegmentView {
         geom.faces.push( new THREE.Face3( 3,5,2) );
 
         geom.computeFaceNormals();
+        console.log(geom.vertices);
         return geom;
     }
 
-    vector3(pointIndex, depth) {
-        const point = this.data[pointIndex];
+    dataPoint(pointIndex, depth) {
+        let point = this.data[pointIndex];
+        if(point.length == 2) {point[2] = 0;}
         const p = this.tile.location;
-        return new THREE.Vector3(point[0]+p[0], point[1]+p[1], depth);
+        const vector3 = new THREE.Vector3(point[0]+p.x, point[1]+p.y, point[2]+p.z + depth);
+        return vector3;
     }
 };
