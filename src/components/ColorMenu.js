@@ -14,7 +14,7 @@ const setMenuColorsSupported = colors => ({
 const mapStateToProps = state => {
     return {
         title: "colors",
-        colors: state.menuState.colorsSupported
+        colors: state.getIn(['menuState','colorsSupported'])
     }
 }
 

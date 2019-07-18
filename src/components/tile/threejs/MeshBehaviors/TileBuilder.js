@@ -35,7 +35,7 @@ export default class TileBuilder {
         for (let controlPoint of Array.from(this.controlPoints)) { controlPoint.destroy(); }
         this.controlPoints = [];
 
-        if (!this.tileSelected || (ActionManager.state.tileCanvas.state !== 'create')) { return; }
+        if (!this.tileSelected || (ActionManager.state.getIn(['tileCanvas','state']) !== 'create')) { return; }
 
         let i = 0;
         const controlPointData = this.tile.controlPointData();

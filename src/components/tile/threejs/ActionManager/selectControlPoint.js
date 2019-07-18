@@ -1,7 +1,3 @@
-import ActionManager from '../ActionManager'
-
-export default action => {
-    ActionManager.controlPointId = action.data.controlPointId;
-    ActionManager.tileId = action.data.tileId;
-    ActionManager.redrawTile()
+export default (state, action) => {
+    return state.mergeDeep({selection: {tileId: action.data.tileId, pointId: action.data.pointId}})
 }

@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import threeEntryPoint from "../tile/threejs/threeEntryPoint"
 import "./TileCanvas.scss"
 import {addTile} from "./../../actions"
-import ActionManager from "./threejs/ActionManager"
+import TileContainer from "./threejs/TileContainer"
 
 import scrollLock from 'scroll-lock';
 scrollLock.disablePageScroll();
@@ -35,7 +35,7 @@ class TileCanvas extends Component {
 // store.subscribe( updateActionManager );
 
 const mapStateToProps = state => {
-    ActionManager.updateState(state);
+    TileContainer.render(state.get("tileCanvas"));
     return {}
 }
 

@@ -1,5 +1,6 @@
 import addTile from './addTileAction'
 import selectControlPoint from './selectControlPoint'
+import pressControlPoint from './pressControlPoint'
 import moveControlPoint from './moveControlPoint'
 import removeControlPoint from './removeControlPoint'
 import clearSelection from './clearSelection'
@@ -8,7 +9,11 @@ import selectTileSegment from './selectTileSegment'
 import splitTileSegment from './splitTileSegment'
 import {Geometry} from '../../../../geometry'
 
-let reduxStore = null;
+export const tileCanvasAction = (actionType, data) => ({
+    type: 'TILE_CANVAS_ACTION',
+    actionType,
+    data
+})
 
 class ActionManager {
     constructor() {
@@ -57,7 +62,7 @@ class ActionManager {
             action.data.location_delta = Geometry.subtractPoint(ptCoord, location);
         }
 
-        return this.actions.push(action);
+        this.store.dispatch(tileCanvasAction(actionType, actionData));
     }
 
     processActions() {
@@ -67,12 +72,13 @@ class ActionManager {
         }
     }
 
-    processAction(action) {
-        switch (action.type) {
-            case 'addTile': addTile(action); break;
-            case 'selectTileSegment': selectTileSegment(action); break;
-            case 'splitTileSegment': splitTileSegment(action); break;
-            case 'selectControlPoint': selectControlPoint(action); break;
+    processAction(state, action) {
+        switch (action.actionType) {
+            case 'addTile': return addTile(state, action); break;
+            case 'selectTileSegment': return selectTileSegment(state, action); break;
+            case 'splitTileSegment': return splitTileSegment(state, action); break;
+            case 'selectControlPoint': return selectControlPoint(state, action); break;
+            case 'pressControlPoint': return pressControlPoint(state, action); break;
             case 'moveControlPoint': moveControlPoint(action); break;
             case 'clearSelection': clearSelection(action); break;
             case 'removeControlPoint': removeControlPoint(action); break;
@@ -88,6 +94,7 @@ class ActionManager {
         console.log(action);
         this.history.push([action, elapsedTime]);
         this.lastTime = now;
+
     }
 }
 

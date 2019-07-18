@@ -4,7 +4,7 @@ import GeneralLights from './GeneralLights'
 import Stage from './models/Stage'
 import KeyState from 'key-state'
 
-import ActionManager from './ActionManager'
+import TileContainer from "./TileContainer"
 import InteractionPlane from './MeshBehaviors/InteractionPlane'
 
 function buildScene() {
@@ -51,9 +51,16 @@ function createSceneSubjects(scene) {
     return sceneSubjects;
 }
 
-export default class SceneManager {
+class SceneManager {
 
-    constructor(canvas) {
+    constructor() {
+        if (!TileContainer.instance) {
+            TileContainer.instance = this
+        }
+        return TileContainer.instance;
+    }
+
+    start(canvas) {
         this.canvas = canvas;
         this.clock = new THREE.Clock();
         this.origin = new THREE.Vector3(0,0,0);
@@ -70,7 +77,9 @@ export default class SceneManager {
         this.sceneSubjects = createSceneSubjects(this.scene);
         this.objects = [];
         let interactionPlane = new InteractionPlane();
-        this.addToScene(interactionPlane.createThreeObject(this));
+        const threeObject = interactionPlane.createThreeObject(this)
+        this.addToScene(threeObject);
+        this.addToObjects(threeObject);
 
         this.keys = KeyState(window, {
             left: [ "ArrowLeft" ],
@@ -78,7 +87,6 @@ export default class SceneManager {
             wallLeft: ["KeyA"],
             wallRight: ["keyD"]
         });
-        ActionManager.sceneManager = this;
     }
 
     update() {
@@ -114,7 +122,8 @@ export default class SceneManager {
 
     handleDownEvent(coord) {
         if (this.ignoreMouseEvents) { return; }
-        this.raycastIntersects(coord).some( intersect => intersect.object.view.mouseDown(intersect.point) );
+        const array = this.raycastIntersects(coord)
+        array.some( intersect => intersect.object.view.mouseDown(intersect.point) );
     }
 
     raycastIntersects(clientCoord) {
@@ -129,13 +138,18 @@ export default class SceneManager {
 
     addToScene(threeObject) {
         this.scene.add(threeObject);
-        return this.objects.push(threeObject);
+    }
+
+    addToObjects(threeObject) {
+        return this.objects.unshift(threeObject);
     }
 
     removeFromScene(threeObject) {
-        var index;
         this.scene.remove(threeObject);
-        index = this.objects.indexOf(threeObject);
+    }
+
+    removeFromObjects(threeObject) {
+        const index = this.objects.indexOf(threeObject);
         if (index > -1) {
             return this.objects.splice(index, 1);
         }
@@ -146,3 +160,7 @@ export default class SceneManager {
     }
 
 }
+
+const instance = new SceneManager();
+
+export default instance;

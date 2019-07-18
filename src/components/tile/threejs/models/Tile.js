@@ -1,18 +1,63 @@
+import { fromJS } from 'immutable'
+
 import TileConfig from '../../../../TileConfig'
 import Segment from './TileSegment'
 import ControlPoint from './TileControlPoint'
 import { Geometry } from '../../../../geometry' ;
 
+const prefs = TileConfig.tile.prefs;
+
+const startPointInitialState = fromJS({
+    id: 0,
+    pressed: false,
+    position: [0,0,0]
+});
+
+const endPointInitialState = fromJS({
+    id: 1,
+    pressed: false,
+    position: [100,0,0]
+});
+
+const initialState = fromJS({
+    id: null,
+    selected: true,
+    objectType: 'tile',
+    position: [],
+    width: prefs.width,
+    points: [startPointInitialState, endPointInitialState],
+    material: {
+        colorName: "red",
+        color: '#FF0000',
+        colorAmbient: "#000000",
+        colorEmissive: "#000000",
+        colorSpecular: "#000000",
+        shininess: 30,
+        opacity: 1,
+        material: "Lambert",
+        transparent: true
+    }
+});
+
 export default class Tile {
-    constructor(id, location) {
+    constructor(id, position) {
         this.id = id;
-        this.location = location;
+        this.position = position;
         const { width } = TileConfig.tile.prefs;
         const length = TileConfig.tile.prefs.segmentStartLength;
         this.data = [
             [[0,0,0], [length, 0,0], [length, width,0], [0, width,0]]
         ];
     }
+
+    static addTile(id, position) {
+        return initialState.merge({id,position});
+    }
+
+    static setMaterial(state, material) {
+        return state.mergeDeep({material: material})
+    }
+
 
     setMaterial(material) {
         return this.material = {
@@ -23,19 +68,6 @@ export default class Tile {
             colorSpecular: parseInt(material.colorSpecular.replace("#", "0x")),
             shininess: material.shininess,
             opacity: material.opacity,
-            transparent: true
-        };
-    }
-
-    getMaterial() {
-        return {
-            material: this.material.material,
-            color: `#${pad(this.material.color.toString(16), 6)}`,
-            colorAmbient: `#${pad(this.material.colorAmbient.toString(16), 6)}`,
-            colorEmissive: `#${pad(this.material.colorEmissive.toString(16), 6)}`,
-            colorSpecular: `#${pad(this.material.colorSpecular.toString(16), 6)}`,
-            shininess: this.material.shininess,
-            opacity: this.material.opacity,
             transparent: true
         };
     }

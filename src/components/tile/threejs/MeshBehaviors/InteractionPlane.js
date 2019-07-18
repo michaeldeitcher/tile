@@ -34,8 +34,8 @@ export default class InteractionPlane {
 
         var point = {...coord};
         point.y = point.y - (.5 * TileConfig.tile.prefs.width);
-        ActionManager.addAction('addTile', {location: point});
-        ActionManager.processActions();
+        const position = [point.x, point.y, point.z];
+        ActionManager.addAction('addTile', {position: position});
         return true;
     }
     mouseUp(coord) {

@@ -1,6 +1,13 @@
+import { fromJS } from 'immutable'
 import TileConfig from '../TileConfig'
 
-export default function menuState(state = {}, action) {
+const initialState = fromJS({
+    status: '',
+    colorsSupported: [],
+    colorSelected: TileConfig.tile.material.color
+});
+
+export default function menuState(state = initialState, action) {
     switch (action.type) {
         case 'SET_MENU_COLORS_SUPPORTED':
             return {...state, colorsSupported: action.colors };

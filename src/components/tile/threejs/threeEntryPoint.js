@@ -2,7 +2,7 @@ import SceneManager from './SceneManager';
 
 export default container => {
     const canvas = createCanvas(document, container);
-    const sceneManager = new SceneManager(canvas);
+    SceneManager.start(canvas);
 
     let canvasHalfWidth;
     let canvasHalfHeight;
@@ -43,24 +43,24 @@ export default container => {
     }
 
     function touchStart(touch) {
-        sceneManager.handleDownEvent([touch.pageX, touch.pageY]);
+        SceneManager.handleDownEvent([touch.pageX, touch.pageY]);
     }
     function touchMove(touch) {
-        sceneManager.handleMoveEvent([touch.pageX, touch.pageY]);
+        SceneManager.handleMoveEvent([touch.pageX, touch.pageY]);
     }
     function touchEnd(touch) {
-        sceneManager.handleUpEvent([touch.pageX, touch.pageY]);
+        SceneManager.handleUpEvent([touch.pageX, touch.pageY]);
     }
 
 
     function handleMoveEvent(coord) {
-        sceneManager.handleMoveEvent(coord);
+        SceneManager.handleMoveEvent(coord);
     }
     function handleUpEvent(coord) {
-        sceneManager.handleUpEvent(coord);
+        SceneManager.handleUpEvent(coord);
     }
     function handleDownEvent(coord) {
-        sceneManager.handleDownEvent(coord);
+        SceneManager.handleDownEvent(coord);
     }
 
     function resizeCanvas() {        
@@ -73,19 +73,19 @@ export default container => {
         canvasHalfWidth = Math.round(canvas.offsetWidth/2);
         canvasHalfHeight = Math.round(canvas.offsetHeight/2);
 
-        sceneManager.onWindowResize()
+        SceneManager.onWindowResize()
     }
 
     function mouseMove({screenX, screenY}) {
-        sceneManager.onMouseMove(screenX-canvasHalfWidth, screenY-canvasHalfHeight);
+        SceneManager.onMouseMove(screenX-canvasHalfWidth, screenY-canvasHalfHeight);
     }
 
     function render(time) {
         requestAnimationFrame(render);
-        sceneManager.update();
+        SceneManager.update();
     }
 
     function subscribe(state) {
-        sceneManager.subscribe(state);
+        SceneManager.subscribe(state);
     }
 }

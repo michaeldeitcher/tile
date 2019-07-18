@@ -1,14 +1,13 @@
+import { fromJS } from 'immutable'
 import {ADD_TILE} from './../actions/actionTypes'
 import {Map, List} from 'immutable'
 import TileConfig from '../TileConfig'
 
-const addTile = (point) => {
-    return []
-}
+const initialState = fromJS({
+    tileData: null
+});
 
-const initalState = Map( {count: 0, data: List()})
-
-export default function tileData(state = initalState, action) {
+export default function tileData(state = initialState, action) {
     switch (action.type) {
         // case ADD_TILE:
         //     const { width } = TileConfig.tile.prefs;
