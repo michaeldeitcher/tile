@@ -12,11 +12,11 @@ class Selection {
 
     update(state) {
         this.tileId = state.get('tileId');
-        this.pointId = state.get('pointId');
         const pressed = state.get('pressed');
         this.pressed = {
             tileId: pressed.get('tileId'),
-            pointId: pressed.get('pointId')
+            pointId: pressed.get('pointId'),
+            position: pressed.get('position')
         };
     }
 }

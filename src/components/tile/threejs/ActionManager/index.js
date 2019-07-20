@@ -55,13 +55,6 @@ class ActionManager {
             type: actionType,
             data: actionData
         };
-        if (this.controlPoint && (action.type === 'moveControlPoint')) {
-            const tileLocation = [this.tile.location.x, this.tile.location.y];
-            const ptCoord = Geometry.addPoint(this.controlPoint.coord, tileLocation);
-            const location = [action.data.location.x, action.data.location.y];
-            action.data.location_delta = Geometry.subtractPoint(ptCoord, location);
-        }
-
         this.store.dispatch(tileCanvasAction(actionType, actionData));
     }
 
@@ -79,11 +72,11 @@ class ActionManager {
             case 'splitTileSegment': return splitTileSegment(state, action); break;
             case 'selectControlPoint': return selectControlPoint(state, action); break;
             case 'pressControlPoint': return pressControlPoint(state, action); break;
-            case 'moveControlPoint': moveControlPoint(action); break;
-            case 'clearSelection': clearSelection(action); break;
-            case 'removeControlPoint': removeControlPoint(action); break;
-            case 'setMaterial': setMaterial(action); break;
-            case 'setVersionInfo': setVersion(action); break;
+            case 'moveControlPoint': return moveControlPoint(state, action); break;
+            case 'clearSelection': return clearSelection(state, action); break;
+            case 'removeControlPoint': return removeControlPoint(state, action); break;
+            case 'setMaterial': return setMaterial(state, action); break;
+            case 'setVersionInfo': return setVersion(state, action); break;
             default:
                 return;
         }

@@ -6,6 +6,8 @@ import ControlPoint from './TileControlPoint'
 import { Geometry } from '../../../../geometry' ;
 
 const prefs = TileConfig.tile.prefs;
+const tileWidth = prefs.width;
+const initialLength = 100;
 
 const startPointInitialState = fromJS({
     id: 0,
@@ -16,8 +18,12 @@ const startPointInitialState = fromJS({
 const endPointInitialState = fromJS({
     id: 1,
     pressed: false,
-    position: [100,0,0]
+    position: [initialLength,0,0]
 });
+
+const initialSegment = {
+    geometryPoints: [[0,-.5*tileWidth,0],[initialLength,-.5*tileWidth,0],[initialLength,.5*tileWidth,0],[0,.5*tileWidth,0]]
+};
 
 const initialState = fromJS({
     id: null,
@@ -26,6 +32,8 @@ const initialState = fromJS({
     position: [],
     width: prefs.width,
     points: [startPointInitialState, endPointInitialState],
+    segments: {'0': initialSegment},
+    segmentsLastCreatedIndex: 0,
     material: {
         colorName: "red",
         color: '#FF0000',

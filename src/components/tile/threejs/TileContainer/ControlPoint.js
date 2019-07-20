@@ -3,6 +3,7 @@ import TileConfig from '../../../../TileConfig'
 import ActionManager from '../ActionManager'
 import SceneManager from '../SceneManager'
 import Selection from './Selection'
+import TileContainer from './index'
 
 class ControlPoint {
     constructor( id, tile ) {
@@ -28,9 +29,11 @@ class ControlPoint {
         this.state = state;
         this.selected = (this.tile.id === Selection.tileId) && (this.id == Selection.pointId);
         this.pressed = (this.tile.id === Selection.pressed.tileId) && (this.id == Selection.pressed.pointId);
-        const position = state.get("position");
-        this.threeGroup.add(this.createInnerCircle(position));
-        this.threeGroup.add(this.createOuterCircle(position));
+        if(this.pressed)
+            TileContainer.pressedControlPoint = this;
+        this.position = state.get("position");
+        this.threeGroup.add(this.createInnerCircle());
+        this.threeGroup.add(this.createOuterCircle());
         SceneManager.addToObjects(this.innerCircle);
         SceneManager.addToObjects(this.outerCircle);
     }
@@ -43,27 +46,27 @@ class ControlPoint {
             return new THREE.MeshLambertMaterial({color: 0x999999, emissive: 0x999999});
     }
 
-    createInnerCircle(position) {
+    createInnerCircle() {
         const circleGeometry = new THREE.RingGeometry( 8, 14, 32 );
         this.innerCircle = new THREE.Mesh(circleGeometry, this.material());
-        this.innerCircle.position.set(...position);
+        this.innerCircle.position.set(...this.position);
         this.innerCircle['view'] = this;
         return this.innerCircle;
     }
 
-    createOuterCircle(position) {
+    createOuterCircle() {
         const material = new THREE.MeshBasicMaterial( { transparent: true, opacity: 0.0 } );
         const circleGeometry = new THREE.CircleGeometry( 20, 32 );
         this.outerCircle = new THREE.Mesh(circleGeometry, material);
-        this.outerCircle.position.set(...position);
+        this.outerCircle.position.set(...this.position);
         this.outerCircle['view'] = this;
         return this.outerCircle;
     }
 
     mouseMove(coord) {
         if( this.pressed ) {
-            ActionManager.addAction('moveControlPoint', {location: coord});
-            ActionManager.processActions();
+            const worldPosition = new THREE.Vector3(...this.position).add( new THREE.Vector3(...this.tile.position));
+            ActionManager.addAction('moveControlPoint', {vector: worldPosition.sub(coord)});
             return true;
         }
         return false;
@@ -73,18 +76,16 @@ class ControlPoint {
         if( this.selected )
             ActionManager.addAction('removeControlPoint');
         else
-            ActionManager.addAction('pressControlPoint', {tileId: this.tile.id, pointId: this.id});
+            ActionManager.addAction('pressControlPoint', {tileId: this.tile.id, pointId: this.id, position: coord});
         return true;
     }
 
     mouseUp(coord) {
-        return false;
-        if( this.selected ) {
-            ActionManager.controlPointId = null;
-            ActionManager.controlPoint = null;
-            return true;
-        } else
-            return false;
+        if( this.pressed ) {
+            TileContainer.pressedControlPoint = null;
+            this.pressed = false;
+            ActionManager.addAction('pressControlPoint', {tileId: this.tile.id, pointId: null, position: coord});
+        }
     }
 };
 

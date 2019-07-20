@@ -1,3 +1,3 @@
 export default (state, action) => {
-    return state.mergeDeep({selection: {pressed: {tileId: action.data.tileId, pointId: action.data.pointId}}})
+    return state.mergeDeep({selection: {pressed: {tileId: action.data.tileId, pointId: action.data.pointId, position: action.data.position}}})
 }

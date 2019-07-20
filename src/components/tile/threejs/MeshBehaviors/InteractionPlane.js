@@ -1,6 +1,8 @@
 import * as THREE from 'three'
+import Selection from '../TileContainer/Selection'
 import ActionManager from '../ActionManager'
 import TileConfig from '../../../../TileConfig'
+import TileContainer from '../TileContainer/index'
 
 export default class InteractionPlane {
     constructor() {
@@ -18,17 +20,16 @@ export default class InteractionPlane {
     }
 
     mouseMove(coord) {
-        if(ActionManager.controlPoint != null){
-            ActionManager.addAction('moveControlPoint', {location: coord});
-            ActionManager.processActions();
+        if(TileContainer.pressedControlPoint){
+            TileContainer.pressedControlPoint.mouseMove(coord);
             return true;
         }
         return false;
     }
+
     mouseDown(coord) {
         if(ActionManager.tile != null){
             ActionManager.addAction('clearSelection', {});
-            ActionManager.processActions();
             return true;
         }
 
@@ -39,6 +40,11 @@ export default class InteractionPlane {
         return true;
     }
     mouseUp(coord) {
+        if(TileContainer.pressedControlPoint){
+            TileContainer.pressedControlPoint.mouseUp(coord);
+            return true;
+        }
+
         return false;
     }
 };

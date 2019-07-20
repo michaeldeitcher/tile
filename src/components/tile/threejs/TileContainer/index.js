@@ -5,6 +5,7 @@ import Selection from './Selection'
 class TileContainer {
     constructor() {
         this.tiles = {};
+        this.pressedControlPoint = null;
 
         if (!TileContainer.instance) {
             TileContainer.instance = this
