@@ -13,7 +13,6 @@ class TileCanvas extends Component {
 
     componentDidMount() {
         threeEntryPoint(this.threeRootElement);
-        this.props.dispatch(addTile({point: [0,0,0]}));
     }
 
     handleChange(e) {

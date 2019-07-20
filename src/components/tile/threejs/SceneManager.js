@@ -54,10 +54,10 @@ function createSceneSubjects(scene) {
 class SceneManager {
 
     constructor() {
-        if (!TileContainer.instance) {
-            TileContainer.instance = this
+        if (!SceneManager.instance) {
+            SceneManager.instance = this
         }
-        return TileContainer.instance;
+        return SceneManager.instance;
     }
 
     start(canvas) {

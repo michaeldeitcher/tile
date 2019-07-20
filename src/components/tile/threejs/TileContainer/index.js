@@ -4,6 +4,7 @@ import Selection from './Selection'
 
 class TileContainer {
     constructor() {
+        this.state = null;
         this.tiles = {};
         this.pressedControlPoint = null;
 
@@ -23,6 +24,7 @@ class TileContainer {
     }
 
     render(state) {
+        this.state = state;
         Selection.update(state.get('selection'));
 
         const tiles = state.get('tiles').toList();

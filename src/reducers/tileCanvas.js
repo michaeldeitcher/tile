@@ -17,9 +17,8 @@ const initialState = fromJS({
 
 export default function tileCanvas(state = initialState, action) {
     switch (action.type) {
-        case 'TILE_CANVAS_ACTION':
-            const newState = ActionManager.processAction(state, action);
-            return newState;
+        case 'PUBLISH_STATE':
+            return action.newState;
             break;
         default:
             return state;

@@ -7,12 +7,13 @@ import clearSelection from './clearSelection'
 import setMaterial from './setMaterial'
 import selectTileSegment from './selectTileSegment'
 import splitTileSegment from './splitTileSegment'
+import TileContainer from '../TileContainer'
 import {Geometry} from '../../../../geometry'
 
-export const tileCanvasAction = (actionType, data) => ({
-    type: 'TILE_CANVAS_ACTION',
+export const tileCanvasAction = (actionType, newState) => ({
+    type: 'PUBLISH_STATE',
     actionType,
-    data
+    newState
 })
 
 class ActionManager {
@@ -41,21 +42,18 @@ class ActionManager {
         this.store = store;
     }
 
-    updateState(state) {
-        console.log(state)
-        this.state = state;
-    }
-
     redrawTile() {
         this.tileBuilders[this.tile.id].redraw();
     }
 
-    addAction(actionType, actionData){
-        let action = {
-            type: actionType,
-            data: actionData
-        };
-        this.store.dispatch(tileCanvasAction(actionType, actionData));
+    addAction(actionType, data){
+        const newState = this.processAction(TileContainer.state, {actionType, data});
+        TileContainer.render(newState);
+        // let action = {
+        //     type: actionType,
+        //     data: newState
+        // };
+        // this.store.dispatch(tileCanvasAction(actionType, newState));
     }
 
     processActions() {
