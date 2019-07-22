@@ -35,7 +35,7 @@ export default class InteractionPlane {
 
         var point = {...coord};
         point.y = point.y - (.5 * TileConfig.tile.prefs.width);
-        const position = [point.x, point.y, point.z];
+        const position = [point.x, point.y, point.z+10];
         ActionManager.addAction('addTile', {position: position});
         return true;
     }

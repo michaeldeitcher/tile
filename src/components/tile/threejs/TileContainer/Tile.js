@@ -2,30 +2,37 @@ import * as THREE from 'three'
 import ControlPoint from './ControlPoint'
 import Segment from './Segment'
 import SceneManager from '../SceneManager'
+import Selection from './Selection'
 import { Geometry } from '../../../../geometry' ;
 
 export default class Tile {
     constructor(id) {
         this.id = id;
-        this.segments = {};
+        this.segments = [];
         this.points = [];
         this.threeGroup = new THREE.Group();
         SceneManager.addToScene(this.threeGroup);
     }
 
-    renderSegments(state) {
-        for( let segment of state.entries() ) {
-            this.renderSegment(...segment);
+    removeSegments(){
+        var segment = this.segments.pop();
+        while(segment) {
+            segment.removeFromGroup();
+            segment = this.segments.pop();
         }
     }
 
-    renderSegment(key, state) {
-        let segment = this.segments[key];
-        if(segment == null){
-            segment = new Segment(this);
-            this.segments[key] = segment;
+    renderSegments(state) {
+        this.removeSegments();
+        for( let segment of state ) {
+            this.renderSegment(segment);
         }
+    }
+
+    renderSegment(state) {
+        const segment = new Segment(this);
         segment.render(state);
+        this.segments.push(segment);
     }
 
     removePoints(){
@@ -38,7 +45,7 @@ export default class Tile {
 
     renderPoints(state){
         this.removePoints();
-        if(this.state.get("selected")){
+        if(Selection.tileId == this.id){
             for( let point of state ) {
                 this.renderControlPoint(point);
             }

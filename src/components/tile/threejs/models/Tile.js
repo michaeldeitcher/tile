@@ -12,16 +12,17 @@ const initialLength = 100;
 const startPointInitialState = fromJS({
     id: 0,
     pressed: false,
-    position: [0,0,0]
+    position: [0,0,10]
 });
 
 const endPointInitialState = fromJS({
     id: 1,
     pressed: false,
-    position: [initialLength,0,0]
+    position: [initialLength,0,10]
 });
 
 const initialSegment = {
+    id: 0,
     geometryPoints: [[0,-.5*tileWidth,0],[initialLength,-.5*tileWidth,0],[initialLength,.5*tileWidth,0],[0,.5*tileWidth,0]]
 };
 
@@ -32,7 +33,7 @@ const initialState = fromJS({
     position: [],
     width: prefs.width,
     points: [startPointInitialState, endPointInitialState],
-    segments: {'0': initialSegment},
+    segments: [initialSegment],
     segmentsLastCreatedIndex: 0,
     material: {
         colorName: "red",

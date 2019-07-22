@@ -31,7 +31,8 @@ class ControlPoint {
         this.pressed = (this.tile.id === Selection.pressed.tileId) && (this.id == Selection.pressed.pointId);
         if(this.pressed)
             TileContainer.pressedControlPoint = this;
-        this.position = state.get("position");
+        this.position = state.get("position").toArray();
+        this.position[2] = 10;
         this.threeGroup.add(this.createInnerCircle());
         this.threeGroup.add(this.createOuterCircle());
         SceneManager.addToObjects(this.innerCircle);
@@ -66,14 +67,14 @@ class ControlPoint {
     mouseMove(coord) {
         if( this.pressed ) {
             const worldPosition = new THREE.Vector3(...this.position).add( new THREE.Vector3(...this.tile.position));
-            ActionManager.addAction('moveControlPoint', {vector: worldPosition.sub(coord)});
+            ActionManager.addAction('moveControlPoint', {tileId: this.tile.id, pointId: this.id, vector: worldPosition.sub(coord)});
             return true;
         }
         return false;
     }
 
     mouseDown(coord) {
-        if( this.selected )
+        if( false )
             ActionManager.addAction('removeControlPoint');
         else
             ActionManager.addAction('pressControlPoint', {tileId: this.tile.id, pointId: this.id, position: coord});

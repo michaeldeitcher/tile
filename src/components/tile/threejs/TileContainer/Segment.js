@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import TileConfig from '../../../../TileConfig'
 import ActionManager from '../ActionManager'
 import SceneManager from '../SceneManager'
+import Selection from './Selection'
 
 export default class Segment {
     constructor(tile) {
@@ -10,6 +11,8 @@ export default class Segment {
         this.threeGroup = tile.threeGroup;
         this.state = null;
         this.threeObject = null;
+
+        this.pressed = false;
     }
 
     render(state) {
@@ -17,6 +20,7 @@ export default class Segment {
             return;
         }
         this.removeFromGroup();
+        this.id = state.get('id');
         this.data = state.get("geometryPoints");
         const material = this.getMaterial();
         material.side = THREE.DoubleSide;
@@ -54,20 +58,18 @@ export default class Segment {
     }
 
     mouseDown(coord) {
-        this.state = 'mousedown';
+        this.pressed = true;
         return true;
     }
 
     mouseUp(coord) {
-        if (this.state !== 'mousedown') { return; }
-        const selection = [this.tile.id, this.segmentIndex];
-        if (ActionManager.tile && ActionManager.tile.id == selection[0]) {
+        const selection = {tileId: this.tile.id, segmentId: this.id};
+        if ( this.pressed ) {
             ActionManager.addAction('splitTileSegment', selection);
         } else {
             ActionManager.addAction('selectTileSegment', selection);
         }
-        ActionManager.processActions();
-        this.state = undefined;
+        this.pressed = false;
         return true;
     }
 
