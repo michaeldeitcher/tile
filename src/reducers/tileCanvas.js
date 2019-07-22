@@ -1,6 +1,4 @@
 import { fromJS } from 'immutable'
-import ActionManager from '../components/tile/threejs/ActionManager'
-import TileConfig from '../TileConfig'
 
 const initialState = fromJS({
     state: 'create',

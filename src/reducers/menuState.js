@@ -1,5 +1,5 @@
 import { fromJS } from 'immutable'
-import TileConfig from '../TileConfig'
+import TileConfig from '../components/TileCanvas/InitialStates/TileConfig'
 
 const initialState = fromJS({
     status: '',
