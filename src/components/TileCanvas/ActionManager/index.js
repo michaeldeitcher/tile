@@ -41,7 +41,6 @@ class ActionManager {
 
     addAction(actionType, data){
         const newState = this.processAction(TileContainer.state, {actionType, data});
-        TileContainer.render(newState);
         let action = {
             type: actionType,
             data: newState

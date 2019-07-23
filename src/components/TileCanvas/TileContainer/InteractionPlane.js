@@ -10,8 +10,8 @@ export default class InteractionPlane {
     createThreeObject(scene) {
         // var plane = new THREE.Plane( new THREE.Vector3( 0,1,0 ) );
         // this.threeObject = new THREE.PlaneHelper( plane, 1, 0xFF0000 );
-        const material = new THREE.MeshBasicMaterial( {color: 0x000000 } );
-        const geometry = new THREE.BoxGeometry(1000, 1000, 1);
+        const material = new THREE.MeshBasicMaterial( {color: 0x444444 } );
+        const geometry = new THREE.BoxGeometry(600, 600, 1);
         this.threeObject = new THREE.Mesh(geometry, material);
         this.threeObject.position.set(0,0,0);
         this.threeObject['view'] = this;
@@ -42,7 +42,7 @@ export default class InteractionPlane {
             TileContainer.pressedControlPoint.mouseUp(coord);
             return true;
         }
-
+        TileContainer.pressedControlPoint = null;
         return false;
     }
 };

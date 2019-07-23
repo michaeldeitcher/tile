@@ -9,6 +9,9 @@ export default scene => {
     scene.add(lightIn);
     scene.add(lightOut);
 
+    var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+    scene.add( light );
+
     const rad = 80;
 
     function update(time) {

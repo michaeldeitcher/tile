@@ -14,23 +14,12 @@ class TileCanvas extends Component {
         threeEntryPoint(this.threeRootElement);
     }
 
-    handleChange(e) {
-        console.log(e)
-    }
-
     render () {
         return (
             <div className="tile-canvas" ref={element => this.threeRootElement = element} />
     );
     }
 }
-
-// ActionManager.setStore(store);
-// const updateActionManager = () => {
-//     console.log('hmm');
-//     ActionManager.handleStoreChange();
-// };
-// store.subscribe( updateActionManager );
 
 const mapStateToProps = state => {
     TileContainer.render(state.get("tileCanvas"));

@@ -23,6 +23,7 @@ let recalculateSegments = (state, tileId) => {
 }
 
 let applyCornerIntersectModifier = (segmentsGeometry) => {
+    var zPos = 0;
     let lastSegment = null;
     let isFirstSegment = true;
     for( let [i, segment] of segmentsGeometry.entries() ) {
@@ -37,6 +38,7 @@ let applyCornerIntersectModifier = (segmentsGeometry) => {
             segmentsGeometry[i-1][2] = rightIntersect;
             segmentsGeometry[i][0] = leftIntersect;
             segmentsGeometry[i][3] = rightIntersect;
+            segmentsGeometry[i-1][1][2] = segmentsGeometry[i][0][2] = segmentsGeometry[i][3][2] = zPos;
         }
         lastSegment = segment;
     }
@@ -53,7 +55,7 @@ let calculateSegmentsGeometry = (points, width) => {
         else {
             let start = beginPoint;
             let end = point.get('position').toArray();
-            var zPos = 10;//start[2];
+            var zPos = start[2];
             let vector = Geometry.getVector({start,end});
             let orthog = Geometry.getOrthogonalVector(vector);
             let result = [];
@@ -66,7 +68,6 @@ let calculateSegmentsGeometry = (points, width) => {
             result[3] = Geometry.movePoint(result[2], reverseVector);
 
             const segmentPoints = result.map(r => [r[0],r[1],zPos]);
-            console.log(segmentPoints);
             segmentsGeometry.push(segmentPoints);
             beginPoint = end;
         }

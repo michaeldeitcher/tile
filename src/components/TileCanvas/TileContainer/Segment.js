@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import ActionManager from '../ActionManager'
 import SceneManager from '../SceneManager'
 import Selection from './Selection'
+import TileContainer from './index'
 
 export default class Segment {
     constructor(tile) {
@@ -15,9 +16,8 @@ export default class Segment {
     }
 
     render(state) {
-        if( this.data !== null && this.data.equals(state.get("geometryPoints"))){
-            return;
-        }
+        const tileColor = this.tile.state.getIn(['material','color']);
+        this.materialColor = tileColor;
         this.removeFromGroup();
         this.id = state.get('id');
         this.data = state.get("geometryPoints");
@@ -62,6 +62,11 @@ export default class Segment {
     }
 
     mouseUp(coord) {
+        if(TileContainer.pressedControlPoint){
+            TileContainer.pressedControlPoint.mouseUp(coord);
+            return true;
+        }
+
         const selection = {tileId: this.tile.id, segmentId: this.id};
         if ( this.tile.id === Selection.tileId ) {
             ActionManager.addAction('splitTileSegment', selection);
@@ -80,10 +85,11 @@ export default class Segment {
         const geom = new THREE.Geometry();
         let pointIndex = 0;
         while (pointIndex < this.data.size) {
-            geom.vertices.push(this.dataPoint(pointIndex, this.tile.state.get('depth')));
             geom.vertices.push(this.dataPoint(pointIndex, 0));
+            geom.vertices.push(this.dataPoint(pointIndex, this.tile.state.get('depth')));
             pointIndex++;
         }
+
         // front
         geom.faces.push( new THREE.Face3( 0,2,4) );
         geom.faces.push( new THREE.Face3( 0,6,4) );
@@ -114,7 +120,7 @@ export default class Segment {
 
     dataPoint(pointIndex, depth) {
         let point = this.data.get(pointIndex);
-        const vector3 = new THREE.Vector3(point.get(0), point.get(1), point.get(2 + depth));
+        const vector3 = new THREE.Vector3(point.get(0), point.get(1), point.get(2) + depth);
         return vector3;
     }
 };

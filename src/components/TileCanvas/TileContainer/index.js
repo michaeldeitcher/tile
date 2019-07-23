@@ -4,7 +4,7 @@ import Selection from './Selection'
 
 class TileContainer {
     constructor() {
-        this.state = null;
+        this.pressedControlPoint = this.state = null;
         this.tiles = {};
 
         if (!TileContainer.instance) {

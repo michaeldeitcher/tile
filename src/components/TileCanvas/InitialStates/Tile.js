@@ -10,13 +10,13 @@ const initialLength = 100;
 const startPointInitialState = fromJS({
     id: 0,
     pressed: false,
-    position: [0,0,10]
+    position: [0,0,0]
 });
 
 const endPointInitialState = fromJS({
     id: 1,
     pressed: false,
-    position: [initialLength,0,10]
+    position: [initialLength,0,0]
 });
 
 const initialSegment = {

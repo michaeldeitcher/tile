@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import SceneSubject from './SceneSubject'
 import GeneralLights from './GeneralLights'
 import KeyState from 'key-state'
+import ActionManager from "./ActionManager"
 
 import TileContainer from "./TileContainer"
 import InteractionPlane from './TileContainer/InteractionPlane'
@@ -39,6 +40,22 @@ function buildCamera({ width, height }) {
     camera.position.set(pos[0],pos[1],pos[2]);
 
     return camera;
+}
+
+function rotateXAxisCamera( camera, stepX, lookAtPosition ) {
+    var z = camera.position.z;
+    var y = camera.position.y;
+    camera.position.y = y * Math.cos(stepX) + z * Math.sin(stepX);
+    camera.position.z = z * Math.cos(stepX) - y * Math.sin(stepX);
+    camera.lookAt(lookAtPosition);
+}
+
+function rotateYAxisCamera( camera, stepY, lookAtPosition ) {
+    var x = camera.position.x;
+    var z = camera.position.z;
+    camera.position.x = x * Math.cos(stepY) + z * Math.sin(stepY);
+    camera.position.z = z * Math.cos(stepY) - x * Math.sin(stepY);
+    camera.lookAt(lookAtPosition);
 }
 
 function createSceneSubjects(scene) {
@@ -81,15 +98,24 @@ class SceneManager {
         this.addToObjects(threeObject);
 
         this.keys = KeyState(window, {
-            left: [ "ArrowLeft" ],
-            right: [ "ArrowRight" ],
-            wallLeft: ["KeyA"],
-            wallRight: ["keyD"]
+            left: [ "Numpad4", "ArrowLeft" ],
+            right: [ "Numpad6", "ArrowRight" ],
+            up: ["Numpad8", "ArrowUp"],
+            down: ["Numpad2", "ArrowDown"]
         });
     }
 
     update() {
         const elapsedTime = this.clock.getElapsedTime();
+
+        if(this.keys.left)
+            rotateYAxisCamera(this.camera, -.01, this.origin);
+        if(this.keys.right)
+            rotateYAxisCamera(this.camera, .01, this.origin);
+        if(this.keys.up)
+            rotateXAxisCamera(this.camera, -.01, this.origin);
+        if(this.keys.down)
+            rotateXAxisCamera(this.camera, .01, this.origin);
 
         for(let i=0; i< this.sceneSubjects.length; i++)
             this.sceneSubjects[i].update(elapsedTime);
@@ -116,7 +142,9 @@ class SceneManager {
 
     handleUpEvent(coord) {
         if (this.ignoreMouseEvents) { return; }
-        this.raycastIntersects(coord).some( intersect => intersect.object.view.mouseUp(intersect.point) );
+        const handled = this.raycastIntersects(coord).some( intersect => intersect.object.view.mouseUp(intersect.point) );
+        if( handled === false)
+            ActionManager.addAction('pressControlPoint', {pointId: null, position: coord});
     }
 
     handleDownEvent(coord) {

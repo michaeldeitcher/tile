@@ -10,13 +10,12 @@ export default (state, action) => {
     const tile = state.getIn(['tiles', tileId]);
     const points = tile.get('points');
     const pointA = points.get(action.data.segmentId).get('position').toArray();
-    const pointB = points.get(action.data.segmentId+1).get('position').toArray();
+    const pointB = points.get(action.data.segmentId + 1).get('position').toArray();
     const midPoint = Geometry.midPoint(pointA, pointB).concat(pointA[2]); // add original z back
-    let newPoints = points.insert(action.data.segmentId+1, fromJS({pressed: false, position: midPoint})).map( (p,id) => {
+    let newPoints = points.insert(action.data.segmentId + 1, fromJS({position: midPoint})).map((p, id) => {
         return p.set('id', id);
     });
 
-    let newState =  state.setIn(['tiles',tileId,'points'], newPoints);
-
-    return newState;
+    let newState = state.setIn(['tiles', tileId, 'points'], newPoints);
+    return newState.mergeDeep({selection: {tileId: action.data.tileId, pointId: null}})
 }

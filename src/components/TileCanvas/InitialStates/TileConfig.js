@@ -13,7 +13,7 @@ export default {
         prefs: {
             width: 30,
             segmentStartLength: 100,
-            depth: 9
+            depth: 50
         }
     }
 }

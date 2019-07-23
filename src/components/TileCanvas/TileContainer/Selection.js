@@ -1,6 +1,10 @@
+import ActionManager from '../ActionManager'
+
 class Selection {
 
     constructor() {
+        this.movingPointId = null;
+
         this.tileId = null;
         this.pointId = null;
 
@@ -12,12 +16,15 @@ class Selection {
 
     update(state) {
         this.tileId = state.get('tileId');
-        const pressed = state.get('pressed');
-        this.pressed = {
-            tileId: pressed.get('tileId'),
-            pointId: pressed.get('pointId'),
-            position: pressed.get('position')
-        };
+        this.pointId = state.get('pointId');
+
+        const color = state.get('color');
+        // if( this.color !== color ){
+        //     this.color = color;
+        //     if( this.tileId !== null ) {
+        //         ActionManager.addAction('setMaterial', {tileId: this.tileId, color: color});
+        //     }
+        // }
     }
 }
 

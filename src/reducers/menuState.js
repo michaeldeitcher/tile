@@ -12,8 +12,6 @@ export default function menuState(state = initialState, action) {
         case 'SET_MENU_COLORS_SUPPORTED':
             return {...state, colorsSupported: action.colors };
             break;
-        case 'SELECT_COLOR':
-            return {...state, colorSelected: action.color}
         default:
             return state;
     }

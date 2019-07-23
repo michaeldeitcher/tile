@@ -5,6 +5,6 @@ export default (state, action) => {
     //TODO fix use another id other than size
     const id = tiles.size;
     let toMerge = {}
-    toMerge[id] = Tile.addTile(tiles.size, action.data.position);
+    toMerge[id] = Tile.addTile(tiles.size, action.data.position).mergeDeep({material: {color: state.getIn(['selection','color'])}});
     return state.mergeDeep({tiles: toMerge});
 }

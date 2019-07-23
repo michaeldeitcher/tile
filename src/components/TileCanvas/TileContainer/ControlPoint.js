@@ -22,20 +22,20 @@ class ControlPoint {
             this.threeGroup.remove(this.outerCircle);
             SceneManager.removeFromObjects(this.outerCircle);
         }
+        TileContainer.pressedControlPoint = null;
     }
 
     render(state) {
         this.state = state;
         this.selected = (this.tile.id === Selection.tileId) && (this.id == Selection.pointId);
-        this.pressed = (this.tile.id === Selection.pressed.tileId) && (this.id == Selection.pressed.pointId);
-        if(this.pressed)
-            TileContainer.pressedControlPoint = this;
         this.position = state.get("position").toArray();
-        this.position[2] = 10;
+        this.position[2] = this.tile.state.get('depth') + 1;
         this.threeGroup.add(this.createInnerCircle());
         this.threeGroup.add(this.createOuterCircle());
         SceneManager.addToObjects(this.innerCircle);
         SceneManager.addToObjects(this.outerCircle);
+        if(Selection.movingPointId === this.id)
+            TileContainer.pressedControlPoint = this;
     }
 
 
@@ -64,30 +64,42 @@ class ControlPoint {
     }
 
     mouseMove(coord) {
-        if( this.pressed ) {
+        if( Selection.movingPointId === this.id ) {
             const worldPosition = new THREE.Vector3(...this.position).add( new THREE.Vector3(...this.tile.position));
-            ActionManager.addAction('moveControlPoint', {tileId: this.tile.id, pointId: this.id, vector: worldPosition.sub(coord)});
+            let vector = worldPosition.sub(coord);
+            vector.z = 0;
+            ActionManager.addAction('moveControlPoint', {tileId: this.tile.id, pointId: this.id, vector: vector});
             return true;
         }
         return false;
     }
 
     mouseDown(coord) {
-        if( false )
-            ActionManager.addAction('removeControlPoint');
-        else
-            ActionManager.addAction('pressControlPoint', {tileId: this.tile.id, pointId: this.id, position: coord});
-        return true;
-    }
-
-    mouseUp(coord) {
-        if( this.pressed ) {
-            this.pressed = false;
-            ActionManager.addAction('pressControlPoint', {tileId: this.tile.id, pointId: null, position: coord});
-            TileContainer.pressedControlPoint = null;
+        if( !this.selected ) {
+            Selection.movingPointId = this.id;
             return true;
         }
         return false;
+    }
+
+    mouseUp(coord) {
+        let toReturn = false;
+        if( Selection.movingPointId === this.id ) {
+            Selection.movingPointId = null;
+            TileContainer.pressedControlPoint = null;
+            toReturn = true;
+        } else {
+            if( this.selected ) {
+                ActionManager.addAction('removeControlPoint', {tileId: this.tile.id, pointId: this.id});
+                toReturn = true;
+            }
+        }
+        if( !this.selected ){
+            ActionManager.addAction('selectControlPoint', {tileId: this.tile.id, pointId: this.id, position: coord});
+            this.selected = true;
+            return true;
+        }
+        return toReturn;
     }
 };
 
