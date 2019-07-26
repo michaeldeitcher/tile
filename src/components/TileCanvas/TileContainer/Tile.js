@@ -13,6 +13,11 @@ export default class Tile {
         SceneManager.addToScene(this.threeGroup);
     }
 
+    remove(){
+        this.removeSegments();
+        this.removePoints();
+    }
+
     removeSegments(){
         var segment = this.segments.pop();
         while(segment) {

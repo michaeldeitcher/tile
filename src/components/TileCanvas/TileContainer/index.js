@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import Tile from './Tile'
 import Selection from './Selection'
+import ActionManager from '../ActionManager'
 
 class TileContainer {
     constructor() {
@@ -22,11 +23,24 @@ class TileContainer {
         tile.render(state);
     }
 
+    clearCanvas( tiles ) {
+        for (const tile of tiles) {
+            var tileContainer = this.tiles[tile.get('id')];
+            if(tileContainer !== null)
+                tileContainer.remove();
+        }
+    }
+
     render(state) {
+        ActionManager.state = state;
         this.state = state;
+        const tiles = state.get('tiles').toList();
+
+        if(state.get('state') === 'clearCanvas')
+            return this.clearCanvas(tiles);
+
         Selection.update(state.get('selection'));
 
-        const tiles = state.get('tiles').toList();
         for (const tile of tiles) {
             this.renderTile(tile.get('id'), tile);
         }

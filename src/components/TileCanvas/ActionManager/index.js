@@ -7,28 +7,25 @@ import clearSelection from './clearSelection'
 import setMaterial from './setMaterial'
 import selectTileSegment from './selectTileSegment'
 import splitTileSegment from './splitTileSegment'
-import TileContainer from '../TileContainer'
+import createNewCanvas from './createNewCanvas'
 
-export const tileCanvasAction = (actionType, newState) => ({
-    type: 'PUBLISH_STATE',
+export const tileCanvasAction = (actionType, data) => ({
+    type: 'ACTION_MANAGER',
     actionType,
-    newState
+    data
 })
 
 class ActionManager {
     constructor() {
         this.actions = [];
         this.history = [];
+        this.state = null;
 
         if (!ActionManager.instance) {
             ActionManager.instance = this
         }
 
         return ActionManager.instance;
-    }
-
-    setSceneManager(sceneManager) {
-        this.sceneManager = sceneManager;
     }
 
     setStore(store) {
@@ -40,12 +37,7 @@ class ActionManager {
     }
 
     addAction(actionType, data){
-        const newState = this.processAction(TileContainer.state, {actionType, data});
-        let action = {
-            type: actionType,
-            data: newState
-        };
-        this.store.dispatch(tileCanvasAction(actionType, newState));
+        this.store.dispatch(tileCanvasAction(actionType, data));
     }
 
     processActions() {
@@ -66,6 +58,7 @@ class ActionManager {
             case 'clearSelection': return clearSelection(state, action); break;
             case 'removeControlPoint': return removeControlPoint(state, action); break;
             case 'setMaterial': return setMaterial(state, action); break;
+            case 'createNewCanvas': return setMaterial(state, action); break;
             case 'setVersionInfo': return setVersion(state, action); break;
             default:
                 return;
@@ -74,7 +67,6 @@ class ActionManager {
         const date = new Date();
         const now = date.getTime();
         let elapsedTime = (this.lastTime != null) ? now - this.lastTime : 0;
-        console.log(action);
         this.history.push([action, elapsedTime]);
         this.lastTime = now;
 
