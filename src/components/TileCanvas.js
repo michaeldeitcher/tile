@@ -22,10 +22,7 @@ class TileCanvas extends Component {
 }
 
 const mapStateToProps = state => {
-    const tileCanvasState = state.get("tileCanvas");
-    const canvasState = tileCanvasState.getIn(['canvases', tileCanvasState.get('currentCanvasId')]);
-    console.log(canvasState.toJS());
-    TileContainer.render(canvasState);
+    TileContainer.render(state.get('tileCanvas'));
     return {}
 }
 

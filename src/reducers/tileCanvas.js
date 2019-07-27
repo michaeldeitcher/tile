@@ -46,6 +46,12 @@ export default function tileCanvas(state = initialState, action) {
             if(tileId !== null)
                 newCanvasState = newCanvasState.setIn(['tiles',tileId.toString(),'material', 'color'], action.color);
             return mergeCanvasState(state, newCanvasState);
+        case 'CREATE_NEW_CANVAS':
+            const newCanvasId = generate();
+            var newState = state.setIn(['canvases',newCanvasId], initialCanvasState.set('id', newCanvasId));
+            return newState.set( 'currentCanvasId', newCanvasId);
+        case 'SELECT_CANVAS':
+            return state.set( 'currentCanvasId', action.canvasId);
         default:
             return state;
     }

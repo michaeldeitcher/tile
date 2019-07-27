@@ -2,24 +2,38 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { AddToPhotos } from '@material-ui/icons';
 
-const createNewCanvas = color => ({
+const createNewCanvas = title => ({
     type: 'CREATE_NEW_CANVAS',
     title
 })
 
+const selectCanvas = canvasId => ({
+    type: 'SELECT_CANVAS',
+    canvasId
+})
+
 const mapStateToProps = state => {
-    return {}
+    return {canvases: state.getIn(['tileCanvas', 'canvases'])};
 }
 
 class CanvasGallery extends Component {
-    handleChangeComplete(color, event) {
-        this.props.selectColor(color.hex);
+    createNewCanvas() {
+        this.props.createNewCanvas(Date.now());
+    }
+
+    selectCanvas(id) {
+        this.props.selectCanvas(id);
     }
 
     render () {
         return (
             <div>
-                <button><AddToPhotos/></button>
+                <button onClick={() => this.createNewCanvas()}><AddToPhotos/></button>
+                {
+                    this.props.canvases.entrySeq().map(([id, canvas]) => {
+                        return <button key={id} onClick={() => this.selectCanvas(id)}></button>
+                    })
+                }
             </div>
         );
     };
@@ -27,5 +41,5 @@ class CanvasGallery extends Component {
 
 export default connect(
     mapStateToProps,
-    { createNewCanvas }
+    { createNewCanvas, selectCanvas }
 )(CanvasGallery);
