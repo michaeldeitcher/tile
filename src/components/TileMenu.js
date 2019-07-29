@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import ColorMenu from './TileMenu/ColorMenu'
-import CanvasGallery from './TileMenu/CanvasGallery'
+import DocumentGallery from './TileMenu/DocumentGallery'
 import { Menu, ColorLens, Collections } from '@material-ui/icons';
 import './TileMenu.scss'
 
@@ -22,7 +22,7 @@ export default class TileMenu extends Component {
             <div>
                 {menuButton}
                 <button onClick={() => this.selectMenu("colorMenu")}> <ColorLens/> </button>
-                <button onClick={() => this.selectMenu("canvasGallery")}> <Collections/> </button>
+                <button onClick={() => this.selectMenu("documentGallery")}> <Collections/> </button>
             </div>
         );
 
@@ -34,8 +34,8 @@ export default class TileMenu extends Component {
             case "colorMenu":
                 activeMenu = <div>{menuButton}<ColorMenu/></div>;
                 break;
-            case "canvasGallery":
-                activeMenu = <div>{menuButton}<CanvasGallery/></div>;
+            case "documentGallery":
+                activeMenu = <div>{menuButton}<DocumentGallery/></div>;
                 break;
         }
 

@@ -9,7 +9,7 @@ import selectTileSegment from './selectTileSegment'
 import splitTileSegment from './splitTileSegment'
 import createNewCanvas from './createNewCanvas'
 
-export const tileCanvasAction = (actionType, data) => ({
+export const documentAction = (actionType, data) => ({
     type: 'ACTION_MANAGER',
     actionType,
     data
@@ -37,7 +37,7 @@ class ActionManager {
     }
 
     addAction(actionType, data){
-        this.store.dispatch(tileCanvasAction(actionType, data));
+        this.store.dispatch(documentAction(actionType, data));
     }
 
     processActions() {

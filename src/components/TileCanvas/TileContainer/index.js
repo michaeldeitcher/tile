@@ -5,7 +5,7 @@ import ActionManager from '../ActionManager'
 
 class TileContainer {
     constructor() {
-        this.canvasId = null;
+        this.documentId = null;
         this.pressedControlPoint = this.state = null;
         this.tiles = {};
 
@@ -32,15 +32,15 @@ class TileContainer {
     }
 
     render(state) {
-        const canvasId = state.get('currentCanvasId');
-        const canvasState = state.getIn(['canvases', canvasId]);
+        const documentId = state.get('currentDocumentId');
+        const documentState = state.getIn(['documents', documentId]);
 
-        ActionManager.state = canvasState;
-        this.state = canvasState;
+        ActionManager.state = documentState;
+        this.state = documentState;
 
-        if(canvasId != this.canvasId) {
+        if(documentId != this.documentId) {
             this.clearCanvas(tiles);
-            this.canvasId = canvasId;
+            this.documentId = documentId;
         }
 
         Selection.update(this.state.get('selection'));

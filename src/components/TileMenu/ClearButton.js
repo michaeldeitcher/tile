@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 
 const clearCanvas = data => ({
-    type: 'CLEAR_CANVAS'
+    type: 'CLEAR_DOCUMENT'
 })
 
 const mapStateToProps = state => {
